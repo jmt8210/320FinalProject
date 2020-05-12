@@ -1,0 +1,27 @@
+---
+title: "Final Project"
+author: "Brendan Gillespy and Justin Thoms"
+date: "5/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries and packages}
+install.packages("dplyr")
+install.packages("glue")
+remotes::install_github("Josiahparry/genius")
+remotes::install_github("charlie86/spotifyr")
+install.packages("tidyverse")
+library(spotifyr)
+library(tidyverse)
+```
+
+```{r spotifyAuthentication}
+Sys.setenv(SPOTIFY_CLIENT_ID = '94669f76e9834f5bac55f1a768b6a944')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '8aff2cd2be0b4b85956d60c5d179f45f')
+
+access_token <- get_spotify_access_token()
+```
