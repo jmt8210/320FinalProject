@@ -10,20 +10,71 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+#TODO: Concat all different year csvs to dfs
+
 library(tidyverse)
 library(dplyr)
 attendance2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game-statistics.csv")
 teamGameStats2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team-game-statistics.csv")
+rushing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/rush.csv")
+passing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/pass.csv")
+teams2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team.csv")
 gameCodes <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game.csv")
 
-teamGameStats2013
+```
 
-gameCodes
+```{r addWinsCol}
 
-findWinLoss <- function(gameCode, teamCode, score){
-  filter(teamGameStats2013, "Game Code" == gameCode & "Team Code" == teamCode) %>%
+findPointsAgainst <- function(df, gameCode, teamCode){
+  temp <- teamGameStats2013 %>%
+    filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
+    select(Points) %>%
+    as.numeric(.[,1]) %>%
+    .[1]
+  print(temp)
+  temp
 }
+  
+findPointsAgainst(teamGameStats2013, "0005012820130829",  5)
 
-gameCodes %>%
-  mutate(homeScore= , awayScore= , winCode= )
+teamGameStats2013 %>%
+  mutate(pointsAgainst=findPointsAgainst(., `Game Code`, `Team Code`))
+
+```
+
+```{r graph}
+teamGameStats2013 %>%
+  ggplot((aes(x=(`Pass Yard` + `Rush Yard`), y=Points))) +
+  geom_point() +
+  geom_smooth(method=lm) +
+  labs(x="Total Yards",
+       y="Points Scored",
+       title = "Points Scored per Yard by Game")
+
+rushing2013 %>%
+  filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
+  inner_join(teams2013, by="Team Code") %>%
+  ggplot(aes(x=reorder(factor(Name), Yards), y=Yards, color=`Name`)) +
+    geom_violin() +
+    labs(x="",
+         y="Rushing Yards",
+         title = "Distribution of Rushing Yards per Attempt by Top Football Schools") +
+    theme(legend.position = "none")
+
+passing2013 %>%
+  inner_join(teams2013, by="Team Code") %>%
+  filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
+  ggplot(aes(x=reorder(factor(Name), Yards), y=Yards, color=Name)) + 
+  labs(x="",
+       y="Passing Yards",
+       title = "Distribution of Passing Yards per Attempt by Top Football Schools") + 
+  geom_violin() + 
+  theme(legend.position="none")
+
+```
+
+
+teamGameStats2013 %>%
+  mutate(opponentPoints=findOpponentPoints(., `Game Code`, `Team Code`))%>%
+  mutate(win=(opponentPoints < Points))
 ```
