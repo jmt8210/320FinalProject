@@ -21,19 +21,10 @@ passing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/pa
 teams2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team.csv")
 gameCodes <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game.csv")
 
-<<<<<<< HEAD
-```
-=======
-
 ```
 
-```{r}
-teamGameStats2013
->>>>>>> 9fd176d66835afdec59acc944ede05660ba52b24
 
 ```{r addWinsCol}
-
-<<<<<<< HEAD
 findPointsAgainst <- function(df, gameCode, teamCode){
   temp <- teamGameStats2013 %>%
     filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
@@ -42,22 +33,9 @@ findPointsAgainst <- function(df, gameCode, teamCode){
     .[1]
   print(temp)
   temp
-=======
-findOpponentPoints <- function(gameCode, teamCode){
-  test <- teamGameStats2013 %>%
-    filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
-    select(Points)
-  if(nrow(test) > 0){
-    print(as.double(test[[1]]))
-    as.double(test[[1]])
-  }
-  else{
-    print("Nothing found")
-    0
-  }
->>>>>>> 9fd176d66835afdec59acc944ede05660ba52b24
+
 }
-  
+
 findPointsAgainst(teamGameStats2013, "0005012820130829",  5)
 
 teamGameStats2013 %>%
@@ -93,17 +71,4 @@ passing2013 %>%
        title = "Distribution of Passing Yards per Attempt by Top Football Schools") + 
   geom_violin() + 
   theme(legend.position="none")
-
-<<<<<<< HEAD
-=======
-teamGameStats2013 %>%
-  mutate(opponentPoints=findOpponentPoints(`Game Code`, `Team Code`))%>%
-  mutate(win=(opponentPoints < Points))
->>>>>>> 9fd176d66835afdec59acc944ede05660ba52b24
-```
-
-
-teamGameStats2013 %>%
-  mutate(opponentPoints=findOpponentPoints(., `Game Code`, `Team Code`))%>%
-  mutate(win=(opponentPoints < Points))
 ```
