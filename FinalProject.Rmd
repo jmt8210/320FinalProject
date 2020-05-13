@@ -10,20 +10,37 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+#TODO: Concat all different year csvs to dfs
+
 library(tidyverse)
 library(dplyr)
 attendance2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game-statistics.csv")
 teamGameStats2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team-game-statistics.csv")
 gameCodes <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game.csv")
 
+
+```
+
+```{r}
 teamGameStats2013
 
 gameCodes
 
-findWinLoss <- function(gameCode, teamCode, score){
-  filter(teamGameStats2013, "Game Code" == gameCode & "Team Code" == teamCode) %>%
+findOpponentPoints <- function(gameCode, teamCode){
+  test <- teamGameStats2013 %>%
+    filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
+    select(Points)
+  if(nrow(test) > 0){
+    print(as.double(test[[1]]))
+    as.double(test[[1]])
+  }
+  else{
+    print("Nothing found")
+    0
+  }
 }
 
-gameCodes %>%
-  mutate(homeScore= , awayScore= , winCode= )
+teamGameStats2013 %>%
+  mutate(opponentPoints=findOpponentPoints(`Game Code`, `Team Code`))%>%
+  mutate(win=(opponentPoints < Points))
 ```
