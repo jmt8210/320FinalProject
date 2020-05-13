@@ -9,19 +9,21 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r libraries and packages}
-install.packages("dplyr")
-install.packages("glue")
-remotes::install_github("Josiahparry/genius")
-remotes::install_github("charlie86/spotifyr")
-install.packages("tidyverse")
-library(spotifyr)
+```{r}
 library(tidyverse)
-```
+library(dplyr)
+attendance2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game-statistics.csv")
+teamGameStats2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team-game-statistics.csv")
+gameCodes <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game.csv")
 
-```{r spotifyAuthentication}
-Sys.setenv(SPOTIFY_CLIENT_ID = '94669f76e9834f5bac55f1a768b6a944')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = '8aff2cd2be0b4b85956d60c5d179f45f')
+teamGameStats2013
 
-access_token <- get_spotify_access_token()
+gameCodes
+
+findWinLoss <- function(gameCode, teamCode, score){
+  filter(teamGameStats2013, "Game Code" == gameCode & "Team Code" == teamCode) %>%
+}
+
+gameCodes %>%
+  mutate(homeScore= , awayScore= , winCode= )
 ```
