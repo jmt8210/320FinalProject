@@ -36,11 +36,33 @@ findPointsAgainst <- function(df, gameCode, teamCode){
 
 }
 
-findPointsAgainst(teamGameStats2013, "0005012820130829",  5)
+#findPointsAgainst(teamGameStats2013, "0005012820130829",  5)
 
-teamGameStats2013 %>%
-  mutate(pointsAgainst=findPointsAgainst(., `Game Code`, `Team Code`))
+#teamGameStats2013 %>%
+#  mutate(pointsAgainst=findPointsAgainst(., `Game Code`, `Team Code`))
 
+
+findPoints <- function(gameCode, teamCode){
+  opponentPoints <- teamGameStats2013 %>%
+    filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
+    select(Points)
+  as.double(opponentPoints[1,1])
+}
+
+# Don't ask why this doesn't work, I don't know. It's 3 in the morning so I'm not gonna worry about it.
+#teamGameStats2013 %>%
+#  mutate(opponentPoints = findPoints(as.character(teamGameStats2013$`Game Code`), as.double(teamGameStats2013$`Team #Code`)))
+
+# This works, I don't know why.
+for(i in 1:nrow(teamGameStats2013)){
+  teamGameStats2013[i,69] = findPoints(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
+}
+
+names(teamGameStats2013)[69] <- "opponentPoints"
+
+teamGameStats2013 <- teamGameStats2013 %>%
+  mutate(win=opponentPoints<Points)
+teamGameStats2013
 ```
 
 ```{r graph}
@@ -55,7 +77,7 @@ teamGameStats2013 %>%
 rushing2013 %>%
   filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
   inner_join(teams2013, by="Team Code") %>%
-  ggplot(aes(x=reorder(factor(Name), Yards), y=Yards, color=`Name`)) +
+  ggplot(aes(x=reorder(factor(Name), Yards), y=Yards, color=Name)) +
     geom_violin() +
     labs(x="",
          y="Rushing Yards",
