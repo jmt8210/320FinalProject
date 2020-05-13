@@ -25,22 +25,25 @@ gameCodes <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game
 
 
 ```{r addWinsCol}
-findPointsAgainst <- function(df, gameCode, teamCode){
-  temp <- teamGameStats2013 %>%
-    filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
-    select(Points) %>%
-    as.numeric(.[,1]) %>%
-    .[1]
-  print(temp)
-  temp
+# Previous code, can we remove?
+#-------------------------------------------------------------------------
+#findPointsAgainst <- function(df, gameCode, teamCode){
+#  temp <- teamGameStats2013 %>%
+#    filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
+#    select(Points) %>%
+#    as.numeric(.[,1]) %>%
+#    .[1]
+#  print(temp)
+#  temp
 
-}
+#}
 
 #findPointsAgainst(teamGameStats2013, "0005012820130829",  5)
 
 #teamGameStats2013 %>%
 #  mutate(pointsAgainst=findPointsAgainst(., `Game Code`, `Team Code`))
 
+#-------------------------------------------------------------------------
 
 findPoints <- function(gameCode, teamCode){
   opponentPoints <- teamGameStats2013 %>%
@@ -93,4 +96,16 @@ passing2013 %>%
        title = "Distribution of Passing Yards per Attempt by Top Football Schools") + 
   geom_violin() + 
   theme(legend.position="none")
+
+# Testing Wins ------------------------------------
+wins <- teamGameStats2013 %>%
+  filter(win == TRUE) %>%
+  group_by(`Team Code`) %>%
+  summarize(Wins=n())
+wins %>%
+  inner_join(passing2013, by="Team Code") %>%
+  ggplot(aes(x=Wins, y=`Yards`)) + geom_point()
+---------------------------------------------------
+
+  
 ```
