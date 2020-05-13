@@ -9,41 +9,24 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-#TODO: Concat all different year csvs to dfs
-
+```{r libraries}
 library(tidyverse)
 library(dplyr)
+```
+
+
+```{r tables}
 attendance2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game-statistics.csv")
 teamGameStats2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team-game-statistics.csv")
 rushing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/rush.csv")
 passing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/pass.csv")
 teams2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team.csv")
-gameCodes <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game.csv")
-
-```
-
+games2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game.csv")
+confrence2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/conference.csv")
+#Todo: Import all tables, and concat the tables with rbind()
+```   
 
 ```{r addWinsCol}
-# Previous code, can we remove?
-#-------------------------------------------------------------------------
-#findPointsAgainst <- function(df, gameCode, teamCode){
-#  temp <- teamGameStats2013 %>%
-#    filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
-#    select(Points) %>%
-#    as.numeric(.[,1]) %>%
-#    .[1]
-#  print(temp)
-#  temp
-
-#}
-
-#findPointsAgainst(teamGameStats2013, "0005012820130829",  5)
-
-#teamGameStats2013 %>%
-#  mutate(pointsAgainst=findPointsAgainst(., `Game Code`, `Team Code`))
-
-#-------------------------------------------------------------------------
 
 findPoints <- function(gameCode, teamCode){
   opponentPoints <- teamGameStats2013 %>%
@@ -52,11 +35,6 @@ findPoints <- function(gameCode, teamCode){
   as.double(opponentPoints[1,1])
 }
 
-# Don't ask why this doesn't work, I don't know. It's 3 in the morning so I'm not gonna worry about it.
-#teamGameStats2013 %>%
-#  mutate(opponentPoints = findPoints(as.character(teamGameStats2013$`Game Code`), as.double(teamGameStats2013$`Team #Code`)))
-
-# This works, I don't know why.
 for(i in 1:nrow(teamGameStats2013)){
   teamGameStats2013[i,69] = findPoints(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
 }
@@ -69,6 +47,7 @@ teamGameStats2013
 ```
 
 ```{r graph}
+
 teamGameStats2013 %>%
   ggplot((aes(x=(`Pass Yard` + `Rush Yard`), y=Points))) +
   geom_point() +
@@ -76,6 +55,7 @@ teamGameStats2013 %>%
   labs(x="Total Yards",
        y="Points Scored",
        title = "Points Scored per Yard by Game")
+
 
 rushing2013 %>%
   filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
@@ -87,6 +67,7 @@ rushing2013 %>%
          title = "Distribution of Rushing Yards per Attempt by Top Football Schools") +
     theme(legend.position = "none")
 
+
 passing2013 %>%
   inner_join(teams2013, by="Team Code") %>%
   filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
@@ -97,15 +78,33 @@ passing2013 %>%
   geom_violin() + 
   theme(legend.position="none")
 
+
 # Testing Wins ------------------------------------
 wins <- teamGameStats2013 %>%
   filter(win == TRUE) %>%
   group_by(`Team Code`) %>%
   summarize(Wins=n())
-wins %>%
-  inner_join(passing2013, by="Team Code") %>%
-  ggplot(aes(x=Wins, y=`Yards`)) + geom_point()
----------------------------------------------------
 
-  
+teamGameStats2013 %>%
+  group_by(`Team Code`) %>%
+  summarize(rushYards=sum(`Rush Yard`), passYards=sum(`Pass Yard`), wins=sum(win)) %>%
+  mutate(equalizer = "All Teams") %>%
+  ggplot(aes(x=equalizer, y=wins)) + 
+  labs(x="",
+       y="Wins",
+       title = "Distribution of Passing Yards per Attempt by Top Football Schools") + 
+  geom_violin() + 
+  theme(legend.position="none")
+
+teamGameStats2013 %>%
+  group_by(`Team Code`) %>%
+  summarize(wins=n()) %>%
+  filter(wins == 1) %>%
+  #This doesn't work? Not sure why
+  #inner_join(teams2013, by=`Team Code`)
+  #inner_join(confrences2013, by=Subdivsion) %>%
+  #group_by(`Team Code`) %>%
+  #summarize(wins=n())
+  #ggplot(aes(x=factor(`Team Code`), y=wins, color=ifelse(Subdivision=FBS, "FBS", "FCS"))) +
+  #geom_point()
 ```
