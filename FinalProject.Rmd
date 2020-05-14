@@ -87,7 +87,8 @@ wins <- teamGameStats2013 %>%
   group_by(`Team Code`) %>%
   summarize(Wins=n())
 
-wins
+teamGameStats2013 %>%
+  inner_join(wins, by="Team Code")
 
 teamGameStats2013 %>%
   group_by(`Team Code`) %>%
@@ -108,4 +109,28 @@ wins %>%
 
 #FCS not included in dataset, only consider FBS
 
+teamGameStats2013 <- wins %>%
+  inner_join(teams2013, by="Team Code") %>%
+  inner_join(confrence2013, by="Conference Code") %>%
+  filter(Subdivision=="FBS")
+
+teamGameStats2013
+
 ```
+
+
+# What variable influences wins the most?
+
+## Test variables:
+
+### Yards For
+
+### Yards Against
+
+### Turnovers
+
+### Home Field Advantage
+
+### First Downs
+
+### Penalties
