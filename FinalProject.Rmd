@@ -2,7 +2,9 @@
 title: "Final Project"
 author: "Brendan Gillespy and Justin Thoms"
 date: "5/11/2020"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
 ---
 
 
@@ -86,22 +88,23 @@ seasonWins2013 %>%
   inner_join(teams2013, by="Team Code") %>%
   inner_join(confrence2013, by="Conference Code") %>%
   filter(Subdivision=="FBS") %>%
-  ggplot(aes(x=factor(Name.x), y=Wins, color=Name.y)) +
+  ggplot(aes(x=reorder(factor(Name.x), Wins), y=Wins, color=Name.y)) +
   geom_point() +
   labs(x="Team") +
   theme(axis.text.x=element_blank())
 
+
+# I added a reorder to the above plot, I'm not sure if it helps or not, I just couldn't come to any conclusions from the graph before.
 ```
 
-```{r potentialFactors}
 # What variable influences wins the most?
 
 ## Test variables:
-```
 
-```{r yardsFor}
+
 ### Yards For
 
+```{r yardsFor}
 teamGameStats2013 <- teamGameStats2013 %>%
   mutate(yardsFor=`Rush Yard`+`Pass Yard`+`Kickoff Ret Yard`+`Punt Ret Yard`+`Misc Ret Yard`+`Int Ret Yard`+`Fum Ret Yard`)
 
@@ -110,9 +113,10 @@ teamGameStats2013 %>%
   geom_violin()
 ```
 
-```{r yardsAgainst}
+
 ### Yards Against
 
+```{r yardsAgainst}
 findYards <- function(gameCode, teamCode){
   opponentYards <- teamGameStats2013 %>%
     filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
@@ -131,13 +135,17 @@ teamGameStats2013 %>%
   geom_violin()
 ```
 
-```{r turnovers}
 ### Turnovers
 
-teamGameStats2013 %>%
-  setNames(make.names(names(.), unique = TRUE))
+```{r turnovers}
+#teamGameStats2013 %>%
+#  setNames(make.names(names(.), unique = TRUE))
 
 # I had to run the data.frame through make.names for some reason, really don't know why
+
+# But that doesn't change the dataframe right? I ran it without and it was fine  
+
+
 findTurnovers <- function(gameCode, teamCode){
   opponentTurnovers <- teamGameStats2013 %>%
     setNames(make.names(names(.), unique = TRUE)) %>%
@@ -158,20 +166,33 @@ teamGameStats2013 %>%
   labs(x="Win",
        y="Turnover Differential",
        title="Turnover Differential Distribution by Game Result")
-
 ```
 
-```{r homeFieldAdvantage}
+
+
 ### Home Field Advantage
 
-#homeGames2013 <- teamGameStats2013 %>%
- # filter()
-#inner_join(games2013, by="Game Code")
+```{r homeFieldAdvantage}
+teamGameStats2013 %>%
+  inner_join(games2013, by="Game Code") %>%
+  mutate(home=(`Team Code` == `Home Team Code` & Site=="TEAM")) %>%
+  group_by(home, win) %>%
+  summarize(count=n()) %>%
+  ggplot(aes(x=win, y=count, fill=home)) + 
+  geom_bar(stat="identity", position=position_dodge()) + 
+  scale_x_discrete(label=c("Lose", "Win")) +
+  scale_fill_discrete(labels=c("Away", "Home")) +
+  theme(legend.title=element_blank()) +
+  labs(x="",
+       y="Games",
+       title="Home and Away vs Wins and Losses")
 ```
 
-```{r firstDowns}
+
+
 ### First Downs
 
+```{r firstDowns}
 teamGameStats2013 %>%
   ggplot(aes(x=win, y=(`1st Down Rush` + `1st Down Pass` + `1st Down Penalty`))) + 
   geom_violin() +
@@ -180,9 +201,11 @@ teamGameStats2013 %>%
        title="Total First Down Distribution by Game Result")
 ```
 
-```{r timeOfPossession}
+
+
 ### Time of Possesion Differential
 
+```{r timeOfPossession}
 findTOP <- function(gameCode, teamCode){
   opponentTOP <- teamGameStats2013 %>%
     setNames(make.names(names(.), unique = TRUE)) %>%
@@ -203,10 +226,15 @@ teamGameStats2013 %>%
   labs(x="Win",
        y="Time of Possession Differential",
        title="Time of Possession Differential Distribution by Game Result")
-
 ```
 
-```{r penalties}
+
+
 ### Penalties
 
+```{r penalties}
+teamGameStats2013 %>%
+  inner_join(teams2013, by="Team Code") %>%
+  inner_join(confrence2013, by="Conference Code") %>%
+  ggplot(aes(x=win, y=Penalty)) + geom_violin()
 ```
