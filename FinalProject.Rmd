@@ -5,6 +5,8 @@ date: "5/11/2020"
 output: html_document
 ---
 
+#
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -85,6 +87,8 @@ wins <- teamGameStats2013 %>%
   group_by(`Team Code`) %>%
   summarize(Wins=n())
 
+wins
+
 teamGameStats2013 %>%
   group_by(`Team Code`) %>%
   summarize(rushYards=sum(`Rush Yard`), passYards=sum(`Pass Yard`), wins=sum(win)) %>%
@@ -96,16 +100,12 @@ teamGameStats2013 %>%
   geom_violin() + 
   theme(legend.position="none")
 
-teamGameStats2013
-teams2013
-confrence2013
-
-teamGameStats2013 %>%
-  group_by(`Team Code`) %>%
-  summarize(wins=n()) %>%
-  filter(wins == 1) %>%
+wins %>%
   inner_join(teams2013, by="Team Code") %>%
   inner_join(confrence2013, by="Conference Code") %>%
-  ggplot(aes(x=factor(Name.x), y=wins, color=ifelse(Subdivision=="FBS", "FBS", "FCS"))) +
+  ggplot(aes(x=factor(Name.x), y=Wins, color=ifelse(Subdivision=="FBS", "FBS", "FCS"))) +
   geom_point()
+
+#FCS not included in dataset, only consider FBS
+
 ```
