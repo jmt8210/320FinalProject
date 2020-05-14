@@ -9,13 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r libraries}
+```{r libraries, message=FALSE}
 library(tidyverse)
 library(dplyr)
 ```
 
 
-```{r tables}
+```{r tables, message=FALSE}
 attendance2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game-statistics.csv")
 teamGameStats2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team-game-statistics.csv")
 rushing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/rush.csv")
@@ -96,15 +96,16 @@ teamGameStats2013 %>%
   geom_violin() + 
   theme(legend.position="none")
 
+teamGameStats2013
+teams2013
+confrence2013
+
 teamGameStats2013 %>%
   group_by(`Team Code`) %>%
   summarize(wins=n()) %>%
   filter(wins == 1) %>%
-  #This doesn't work? Not sure why
-  #inner_join(teams2013, by=`Team Code`)
-  #inner_join(confrences2013, by=Subdivsion) %>%
-  #group_by(`Team Code`) %>%
-  #summarize(wins=n())
-  #ggplot(aes(x=factor(`Team Code`), y=wins, color=ifelse(Subdivision=FBS, "FBS", "FCS"))) +
-  #geom_point()
+  inner_join(teams2013, by="Team Code") %>%
+  inner_join(confrence2013, by="Conference Code") %>%
+  ggplot(aes(x=factor(`Team Code`), y=wins, color=ifelse(Subdivision=="FBS", "FBS", "FCS"))) +
+  geom_point()
 ```
