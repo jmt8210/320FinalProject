@@ -106,6 +106,6 @@ teamGameStats2013 %>%
   filter(wins == 1) %>%
   inner_join(teams2013, by="Team Code") %>%
   inner_join(confrence2013, by="Conference Code") %>%
-  ggplot(aes(x=factor(`Team Code`), y=wins, color=ifelse(Subdivision=="FBS", "FBS", "FCS"))) +
+  ggplot(aes(x=factor(Name.x), y=wins, color=ifelse(Subdivision=="FBS", "FBS", "FCS"))) +
   geom_point()
 ```
