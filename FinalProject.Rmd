@@ -12,7 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r libraries, message=FALSE}
 library(tidyverse)
-library(dplyr)
 ```
 
 
@@ -27,8 +26,7 @@ confrence2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/
 #Todo: Import all tables, and concat the tables with rbind()
 ```   
 
-```{r addWinsCol}
-
+```{r organizeData}
 findPoints <- function(gameCode, teamCode){
   opponentPoints <- teamGameStats2013 %>%
     filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
@@ -44,20 +42,24 @@ names(teamGameStats2013)[69] <- "opponentPoints"
 
 teamGameStats2013 <- teamGameStats2013 %>%
   mutate(win=opponentPoints<Points)
-teamGameStats2013
+
+seasonWins2013 <- teamGameStats2013 %>%
+  filter(win == TRUE) %>%
+  group_by(`Team Code`) %>%
+  summarize(Wins=n())
 ```
 
 ```{r graph}
-
+# See points scored per game per each number of total yardage
 teamGameStats2013 %>%
-  ggplot((aes(x=(`Pass Yard` + `Rush Yard`), y=Points))) +
+  ggplot((aes(x=(`Rush Yard`+`Pass Yard`+`Kickoff Ret Yard`+`Punt Ret Yard`+`Misc Ret Yard`+`Int Ret Yard`+`Fum Ret Yard`), y=Points))) +
   geom_point() +
   geom_smooth(method=lm) +
   labs(x="Total Yards",
        y="Points Scored",
        title = "Points Scored per Yard by Game")
 
-
+# See the distribution of rushing yards per attempt by several top football schools
 rushing2013 %>%
   filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
   inner_join(teams2013, by="Team Code") %>%
@@ -68,7 +70,7 @@ rushing2013 %>%
          title = "Distribution of Rushing Yards per Attempt by Top Football Schools") +
     theme(legend.position = "none")
 
-
+# See the distribution of passing yards per attempt by top football schools
 passing2013 %>%
   inner_join(teams2013, by="Team Code") %>%
   filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
@@ -79,44 +81,37 @@ passing2013 %>%
   geom_violin() + 
   theme(legend.position="none")
 
-
-# Testing Wins ------------------------------------
-wins <- teamGameStats2013 %>%
-  filter(win == TRUE) %>%
-  group_by(`Team Code`) %>%
-  summarize(Wins=n())
-
-teamGameStats2013 %>%
-  inner_join(wins, by="Team Code")
-
-teamGameStats2013 %>%
-  group_by(`Team Code`) %>%
-  summarize(rushYards=sum(`Rush Yard`), passYards=sum(`Pass Yard`), wins=sum(win)) %>%
-  mutate(equalizer = "All Teams") %>%
-  ggplot(aes(x=equalizer, y=wins)) + 
-  labs(x="",
-       y="Wins",
-       title = "Distribution of Passing Yards per Attempt by Top Football Schools") + 
-  geom_violin() + 
-  theme(legend.position="none")
-
-wins %>%
+# See total wins for each team, seperated by confrence
+seasonWins2013 %>%
   inner_join(teams2013, by="Team Code") %>%
   inner_join(confrence2013, by="Conference Code") %>%
-  ggplot(aes(x=factor(Name.x), y=Wins, color=ifelse(Subdivision=="FBS", "FBS", "FCS"))) +
-  geom_point()
-
-#FCS not included in dataset, only consider FBS
-
-seasonStats2013 <- wins %>%
-  inner_join(teams2013, by="Team Code") %>%
-  inner_join(confrence2013, by="Conference Code") %>%
-  filter(Subdivision=="FBS")
+  filter(Subdivision=="FBS") %>%
+  ggplot(aes(x=factor(Name.x), y=Wins, color=Name.y)) +
+  geom_point() +
+  labs(x="Team") +
+  theme(axis.text.x=element_blank())
 
 ```
 
+```{r potentialFactors}
+# What variable influences wins the most?
 
-```{r}
+## Test variables:
+```
+
+```{r yardsFor}
+### Yards For
+
+teamGameStats2013 <- teamGameStats2013 %>%
+  mutate(yardsFor=`Rush Yard`+`Pass Yard`+`Kickoff Ret Yard`+`Punt Ret Yard`+`Misc Ret Yard`+`Int Ret Yard`+`Fum Ret Yard`)
+
+teamGameStats2013 %>%
+  ggplot(aes(x=win, y=yardsFor)) + 
+  geom_violin()
+```
+
+```{r yardsAgainst}
+### Yards Against
 
 findYards <- function(gameCode, teamCode){
   opponentYards <- teamGameStats2013 %>%
@@ -126,55 +121,88 @@ findYards <- function(gameCode, teamCode){
 }
 
 for(i in 1:nrow(teamGameStats2013)){
-  teamGameStats2013[i,71] = findYards(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
+  teamGameStats2013[i,72] = findYards(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
 }
 
-teamGameStats2013
-teamGameStats2013 <- teamGameStats2013 %>%
-  mutate(yardsFor=`Rush Yard`+`Pass Yard`+`Kickoff Ret Yard`+`Punt Ret Yard`+`Misc Ret Yard`+`Int Ret Yard`+`Fum Ret Yard`)
-
-names(teamGameStats2013)[71] <- "yardsAgainst"
-
-teamGameStats2013
-```
-
-
-```{r}
-games2013
-homeGames2013 <- teamGameStats2013 %>%
-  filter()
-  inner_join(games2013, by="Game Code")
-homeGames2013
-  
-
-```
-
-```{r}
-teamGameStats2013 %>%
-  ggplot(aes(x=win, y=yardsFor)) + geom_violin()
+names(teamGameStats2013)[72] <- "yardsAgainst"
 
 teamGameStats2013 %>%
-  ggplot(aes(x=win, y=yardsAgainst)) + geom_violin()
-
-teamGameStats2013 %>%
-  filter()
-  ggplot(aes(x=))
-
+  ggplot(aes(x=win, y=yardsAgainst)) + 
+  geom_violin()
 ```
 
-
-# What variable influences wins the most?
-
-## Test variables:
-
-### Yards For
-
-### Yards Against
-
+```{r turnovers}
 ### Turnovers
+
+teamGameStats2013 %>%
+  setNames(make.names(names(.), unique = TRUE))
+
+# I had to run the data.frame through make.names for some reason, really don't know why
+findTurnovers <- function(gameCode, teamCode){
+  opponentTurnovers <- teamGameStats2013 %>%
+    setNames(make.names(names(.), unique = TRUE)) %>%
+    filter(Game.Code == gameCode & Team.Code != teamCode) %>%
+    select(Pass.Int, Fumble.Lost)
+  as.double(opponentTurnovers[1,1] + opponentTurnovers[1,2])
+}
+
+for(i in 1:nrow(teamGameStats2013)){
+  teamGameStats2013[i,73] = (teamGameStats2013[i, 45] + teamGameStats2013[i, 10]) - findTurnovers(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
+}
+
+names(teamGameStats2013)[73] <- "turnoverDiff"
+
+teamGameStats2013 %>%
+  ggplot(aes(x=win, y=turnoverDiff)) + 
+  geom_violin() +
+  labs(x="Win",
+       y="Turnover Differential",
+       title="Turnover Differential Distribution by Game Result")
+
+```
 
 ### Home Field Advantage
 
+#homeGames2013 <- teamGameStats2013 %>%
+ # filter()
+#inner_join(games2013, by="Game Code")
+
+```{r firstDowns}
 ### First Downs
+
+teamGameStats2013 %>%
+  ggplot(aes(x=win, y=(`1st Down Rush` + `1st Down Pass` + `1st Down Penalty`))) + 
+  geom_violin() +
+  labs(x="Win",
+       y="Total First Downs",
+       title="Total First Down Distribution by Game Result")
+```
+
+```{r timeOfPossession}
+### Time of Possesion Differential
+
+findTOP <- function(gameCode, teamCode){
+  opponentTOP <- teamGameStats2013 %>%
+    setNames(make.names(names(.), unique = TRUE)) %>%
+    filter(Game.Code == gameCode & Team.Code != teamCode) %>%
+    select(Time.Of.Possession)
+  as.double(opponentTOP[1,1])
+}
+
+for(i in 1:nrow(teamGameStats2013)){
+  teamGameStats2013[i,74] = teamGameStats2013[i, 59] - findTOP(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
+}
+
+names(teamGameStats2013)[74] <- "timeOfPossesionDifferential"
+
+teamGameStats2013 %>%
+  ggplot(aes(x=win, y=timeOfPossesionDifferential)) + 
+  geom_violin() +
+  labs(x="Win",
+       y="Time of Possession Differential",
+       title="Time of Possession Differential Distribution by Game Result")
+
+```
+
 
 ### Penalties
