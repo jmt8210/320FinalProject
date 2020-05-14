@@ -5,7 +5,6 @@ date: "5/11/2020"
 output: html_document
 ---
 
-#
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -109,12 +108,57 @@ wins %>%
 
 #FCS not included in dataset, only consider FBS
 
-teamGameStats2013 <- wins %>%
+seasonStats2013 <- wins %>%
   inner_join(teams2013, by="Team Code") %>%
   inner_join(confrence2013, by="Conference Code") %>%
   filter(Subdivision=="FBS")
 
+```
+
+
+```{r}
+
+findYards <- function(gameCode, teamCode){
+  opponentYards <- teamGameStats2013 %>%
+    filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
+    select(`Rush Yard`,`Pass Yard`,`Kickoff Ret Yard`,`Punt Ret Yard`,`Misc Ret Yard`,`Int Ret Yard`,`Fum Ret Yard`)
+  as.double(opponentYards[1,1]+opponentYards[1,2]+opponentYards[1,3]+opponentYards[1,4]+opponentYards[1,5]+opponentYards[1,6]+opponentYards[1,7])
+}
+
+for(i in 1:nrow(teamGameStats2013)){
+  teamGameStats2013[i,71] = findYards(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
+}
+
 teamGameStats2013
+teamGameStats2013 <- teamGameStats2013 %>%
+  mutate(yardsFor=`Rush Yard`+`Pass Yard`+`Kickoff Ret Yard`+`Punt Ret Yard`+`Misc Ret Yard`+`Int Ret Yard`+`Fum Ret Yard`)
+
+names(teamGameStats2013)[71] <- "yardsAgainst"
+
+teamGameStats2013
+```
+
+
+```{r}
+games2013
+homeGames2013 <- teamGameStats2013 %>%
+  filter()
+  inner_join(games2013, by="Game Code")
+homeGames2013
+  
+
+```
+
+```{r}
+teamGameStats2013 %>%
+  ggplot(aes(x=win, y=yardsFor)) + geom_violin()
+
+teamGameStats2013 %>%
+  ggplot(aes(x=win, y=yardsAgainst)) + geom_violin()
+
+teamGameStats2013 %>%
+  filter()
+  ggplot(aes(x=))
 
 ```
 
