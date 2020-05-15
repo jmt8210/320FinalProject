@@ -186,8 +186,11 @@ teamGameStats2013 %>%
 ### First Downs
 
 ```{r firstDowns}
+teamGameStats2013 <- teamGameStats2013 %>%
+  mutate(firstDowns=(`1st Down Rush` + `1st Down Pass` + `1st Down Penalty`))
+
 teamGameStats2013 %>%
-  ggplot(aes(x=win, y=(`1st Down Rush` + `1st Down Pass` + `1st Down Penalty`))) + 
+  ggplot(aes(x=win, y=firstDowns)) + 
   geom_violin() +
   labs(x="Win",
        y="Total First Downs",
@@ -208,10 +211,10 @@ findTOP <- function(gameCode, teamCode){
 }
 
 for(i in 1:nrow(teamGameStats2013)){
-  teamGameStats2013[i,74] = teamGameStats2013[i, 59] - findTOP(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
+  teamGameStats2013[i,76] = teamGameStats2013[i, 59] - findTOP(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
 }
 
-names(teamGameStats2013)[74] <- "timeOfPossesionDifferential"
+names(teamGameStats2013)[76] <- "timeOfPossessionDifferential"
 
 teamGameStats2013 %>%
   ggplot(aes(x=win, y=timeOfPossesionDifferential)) + 
@@ -232,3 +235,8 @@ teamGameStats2013 %>%
   ggplot(aes(x=win, y=Penalty)) + geom_violin()
 ```
 
+
+```{r predictiveModel}
+
+
+```
