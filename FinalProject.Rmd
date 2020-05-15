@@ -14,6 +14,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r libraries, message=FALSE}
 library(tidyverse)
+library(caret)
+library(kableExtra)
+library(cvTools)
 ```
 
 
@@ -26,7 +29,7 @@ teams2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team
 games2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game.csv")
 confrence2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/conference.csv")
 #Todo: Import all tables, and concat the tables with rbind()
-```   
+```
 
 ```{r organizeData}
 findPoints <- function(gameCode, teamCode){
@@ -51,6 +54,10 @@ seasonWins2013 <- teamGameStats2013 %>%
   summarize(Wins=n())
 ```
 
+
+## Interesting Visualizations {.tabset}
+
+### PPG vs Total Yards
 ```{r graph}
 # See points scored per game per each number of total yardage
 teamGameStats2013 %>%
@@ -60,7 +67,11 @@ teamGameStats2013 %>%
   labs(x="Total Yards",
        y="Points Scored",
        title = "Points Scored per Yard by Game")
+```
 
+
+### Rushing Yards per Attempt
+```{r}
 # See the distribution of rushing yards per attempt by several top football schools
 rushing2013 %>%
   filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
@@ -71,7 +82,11 @@ rushing2013 %>%
          y="Rushing Yards",
          title = "Distribution of Rushing Yards per Attempt by Top Football Schools") +
     theme(legend.position = "none")
+```
 
+
+### Passing Yards per Attempt
+```{r}
 # See the distribution of passing yards per attempt by top football schools
 passing2013 %>%
   inner_join(teams2013, by="Team Code") %>%
@@ -82,7 +97,10 @@ passing2013 %>%
        title = "Distribution of Passing Yards per Attempt by Top Football Schools") + 
   geom_violin() + 
   theme(legend.position="none")
+```
 
+### Wins For Team by Conference
+```{r}
 # See total wins for each team, seperated by confrence
 seasonWins2013 %>%
   inner_join(teams2013, by="Team Code") %>%
@@ -166,9 +184,10 @@ teamGameStats2013 %>%
 ### Home Field Advantage
 
 ```{r homeFieldAdvantage}
-teamGameStats2013 %>%
+teamGameStats2013 <- teamGameStats2013 %>%
   inner_join(games2013, by="Game Code") %>%
-  mutate(home=(`Team Code` == `Home Team Code` & Site=="TEAM")) %>%
+  mutate(home=(`Team Code` == `Home Team Code` & Site=="TEAM"))
+teamGameStats2013 %>%
   group_by(home, win) %>%
   summarize(count=n()) %>%
   ggplot(aes(x=win, y=count, fill=home)) + 
@@ -199,6 +218,8 @@ teamGameStats2013 %>%
 ### Time of Possesion Differential
 
 ```{r timeOfPossession}
+
+teamGameStats2013
 findTOP <- function(gameCode, teamCode){
   opponentTOP <- teamGameStats2013 %>%
     setNames(make.names(names(.), unique = TRUE)) %>%
@@ -207,11 +228,13 @@ findTOP <- function(gameCode, teamCode){
   as.double(opponentTOP[1,1])
 }
 
+colNum <- ncol(teamGameStats2013) + 1
+
 for(i in 1:nrow(teamGameStats2013)){
-  teamGameStats2013[i,74] = teamGameStats2013[i, 59] - findTOP(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
+  teamGameStats2013[i,colNum] = teamGameStats2013[i, 59] - findTOP(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
 }
 
-names(teamGameStats2013)[74] <- "timeOfPossesionDifferential"
+names(teamGameStats2013)[colNum] <- "timeOfPossesionDifferential"
 
 teamGameStats2013 %>%
   ggplot(aes(x=win, y=timeOfPossesionDifferential)) + 
@@ -232,3 +255,542 @@ teamGameStats2013 %>%
   ggplot(aes(x=win, y=Penalty)) + geom_violin()
 ```
 
+## Predictions based on variables {.tabset}
+
+### Yards For
+
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(yardsFor, win)
+
+team_data <- testTable %>%
+  na.omit()
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  glm(win~., data = train_set, family = "binomial")
+  logis_pred <- ifelse(predict(logis_fit, newdata = test_set, type = "response") > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+### Yards Against
+
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(yardsAgainst, win)
+
+team_data <- testTable %>%
+  na.omit()
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  glm(win~., data = train_set, family = "binomial")
+  logis_pred <- ifelse(predict(logis_fit, newdata = test_set, type = "response") > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+### Turnovers
+
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(turnoverDiff, win)
+
+team_data <- testTable %>%
+  na.omit()
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  glm(win~., data = train_set, family = "binomial")
+  logis_pred <- ifelse(predict(logis_fit, newdata = test_set, type = "response") > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+### Home Field Advantage
+
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(home, win)
+
+team_data <- testTable %>%
+  na.omit()
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  glm(win~., data = train_set, family = "binomial")
+  logis_pred <- ifelse(predict(logis_fit, newdata = test_set, type = "response") > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+### First Downs
+
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(yardsFor, win)
+
+team_data <- testTable %>%
+  na.omit()
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  glm(win~., data = train_set, family = "binomial")
+  logis_pred <- ifelse(predict(logis_fit, newdata = test_set, type = "response") > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+
+### Time of Possession
+
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(timeOfPossesionDifferential, win)
+
+team_data <- testTable %>%
+  na.omit()
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  glm(win~., data = train_set, family = "binomial")
+  logis_pred <- ifelse(predict(logis_fit, newdata = test_set, type = "response") > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+
+### Penalties
+
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(Penalty, win)
+
+team_data <- testTable %>%
+  na.omit()
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  glm(win~., data = train_set, family = "binomial")
+  logis_pred <- ifelse(predict(logis_fit, newdata = test_set, type = "response") > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+### All
+
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, Penalty, win)
+
+team_data <- testTable %>%
+  na.omit()
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  glm(win~., data = train_set, family = "binomial")
+  logis_pred <- ifelse(predict(logis_fit, newdata = test_set, type = "response") > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+## Random Forest {.tabset}
+
+### Random Forest - All
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, Penalty, win)
+
+team_data <- testTable
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  randomForest::randomForest(win~., data=train_set)
+  logis_pred <- ifelse(predict(logis_fit, test_set) > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Random Forest - Yards For
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(yardsFor, win)
+
+team_data <- testTable
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  randomForest::randomForest(win~., data=train_set)
+  logis_pred <- ifelse(predict(logis_fit, test_set) > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Random Forest - Yards Against
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(yardsAgainst, win)
+
+team_data <- testTable
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  randomForest::randomForest(win~., data=train_set)
+  logis_pred <- ifelse(predict(logis_fit, test_set) > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Random Forest - Turnovers
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(turnoverDiff, win)
+
+team_data <- testTable
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  randomForest::randomForest(win~., data=train_set)
+  logis_pred <- ifelse(predict(logis_fit, test_set) > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Random Forest - Home Field Advantage
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(home, win)
+
+team_data <- testTable
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  randomForest::randomForest(win~., data=train_set)
+  logis_pred <- ifelse(predict(logis_fit, test_set) > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Random Forest - Time of Possession
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(timeOfPossesionDifferential, win)
+
+team_data <- testTable
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  randomForest::randomForest(win~., data=train_set)
+  logis_pred <- ifelse(predict(logis_fit, test_set) > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Random Forest - Penalty
+```{r}
+testTable <- teamGameStats2013 %>%
+  select(Penalty, win)
+
+team_data <- testTable
+
+# Divide data set into 10 folds
+fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
+error_rates <- sapply(1:10, function(fold_index) {
+  test_indices <- which(fold_indices$which == fold_index)
+  # Get test and training set
+  test_set <- testTable[test_indices,]
+  train_set <- testTable[-test_indices,]
+  
+  # Fit the logistic regression model  
+  logis_fit <-  randomForest::randomForest(win~., data=train_set)
+  logis_pred <- ifelse(predict(logis_fit, test_set) > 0.5, 1, 0)
+  logis_error <- mean(test_set$win != logis_pred)
+  
+  logis_error
+})
+
+avg_error_rates <- as.data.frame(t(error_rates)) %>%
+  mutate(fold=1:n()) %>%
+  gather(method,error,-fold) %>%
+  # Get the average error rate
+  summarize(error = mean(error))
+
+kable(avg_error_rates) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
