@@ -132,7 +132,8 @@ names(teamGameStats2013)[72] <- "yardsAgainst"
 
 teamGameStats2013 %>%
   ggplot(aes(x=win, y=yardsAgainst)) + 
-  geom_violin()
+  geom_violin()  +
+  labs()
 ```
 
 ### Turnovers
@@ -150,12 +151,12 @@ findTurnovers <- function(gameCode, teamCode){
   opponentTurnovers <- teamGameStats2013 %>%
     setNames(make.names(names(.), unique = TRUE)) %>%
     filter(Game.Code == gameCode & Team.Code != teamCode) %>%
-    select(Pass.Int, Fumble.Lost)
-  as.double(opponentTurnovers[1,1] + opponentTurnovers[1,2])
+    select(Pass.Int, Fumble.Lost, Punt)
+  as.double(opponentTurnovers[1,1] + opponentTurnovers[1,2], + opponentTurnovers[1,3])
 }
 
 for(i in 1:nrow(teamGameStats2013)){
-  teamGameStats2013[i,73] = (teamGameStats2013[i, 45] + teamGameStats2013[i, 10]) - findTurnovers(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
+  teamGameStats2013[i,73] = (teamGameStats2013[i, 45] + teamGameStats2013[i, 10] + teamGameStats2013[i, 37]) - findTurnovers(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
 }
 
 names(teamGameStats2013)[73] <- "turnoverDiff"
@@ -238,3 +239,4 @@ teamGameStats2013 %>%
   inner_join(confrence2013, by="Conference Code") %>%
   ggplot(aes(x=win, y=Penalty)) + geom_violin()
 ```
+
