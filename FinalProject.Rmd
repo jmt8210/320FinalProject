@@ -24,7 +24,7 @@ rushing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/ru
 passing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/pass.csv")
 teams2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team.csv")
 games2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game.csv")
-confrence2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/conference.csv")
+conference2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/conference.csv")
 #Todo: Import all tables, and concat the tables with rbind()
 ```   
 
@@ -86,7 +86,7 @@ passing2013 %>%
 # See total wins for each team, seperated by confrence
 seasonWins2013 %>%
   inner_join(teams2013, by="Team Code") %>%
-  inner_join(confrence2013, by="Conference Code") %>%
+  inner_join(conference2013, by="Conference Code") %>%
   filter(Subdivision=="FBS") %>%
   ggplot(aes(x=reorder(factor(Name.x), Wins), y=Wins, color=Name.y)) +
   geom_point() +
@@ -231,7 +231,7 @@ teamGameStats2013 %>%
 ```{r penalties}
 teamGameStats2013 %>%
   inner_join(teams2013, by="Team Code") %>%
-  inner_join(confrence2013, by="Conference Code") %>%
+  inner_join(conference2013, by="Conference Code") %>%
   ggplot(aes(x=win, y=Penalty)) + geom_violin()
 ```
 
