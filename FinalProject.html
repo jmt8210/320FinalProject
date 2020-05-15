@@ -514,8 +514,8 @@ seasonWins2013 %&gt;%
 <pre class="r"><code># I added a reorder to the above plot, I&#39;m not sure if it helps or not, I just couldn&#39;t come to any conclusions from the graph before.</code></pre>
 <div id="what-variable-influences-wins-the-most" class="section level1">
 <h1>What variable influences wins the most?</h1>
-<div id="test-variables" class="section level2">
-<h2>Test variables:</h2>
+<div id="test-variables" class="section level2 tabset">
+<h2>Test variables</h2>
 <div id="yards-for" class="section level3">
 <h3>Yards For</h3>
 <pre class="r"><code>teamGameStats2013 &lt;- teamGameStats2013 %&gt;%
@@ -548,15 +548,7 @@ teamGameStats2013 %&gt;%
 </div>
 <div id="turnovers" class="section level3">
 <h3>Turnovers</h3>
-<pre class="r"><code>#teamGameStats2013 %&gt;%
-#  setNames(make.names(names(.), unique = TRUE))
-
-# I had to run the data.frame through make.names for some reason, really don&#39;t know why
-
-# But that doesn&#39;t change the dataframe right? I ran it without and it was fine  
-
-
-findTurnovers &lt;- function(gameCode, teamCode){
+<pre class="r"><code>findTurnovers &lt;- function(gameCode, teamCode){
   opponentTurnovers &lt;- teamGameStats2013 %&gt;%
     setNames(make.names(names(.), unique = TRUE)) %&gt;%
     filter(Game.Code == gameCode &amp; Team.Code != teamCode) %&gt;%

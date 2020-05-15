@@ -99,7 +99,7 @@ seasonWins2013 %>%
 
 # What variable influences wins the most?
 
-## Test variables:
+## Test variables {.tabset}
 
 
 ### Yards For
@@ -138,14 +138,6 @@ teamGameStats2013 %>%
 ### Turnovers
 
 ```{r turnovers}
-#teamGameStats2013 %>%
-#  setNames(make.names(names(.), unique = TRUE))
-
-# I had to run the data.frame through make.names for some reason, really don't know why
-
-# But that doesn't change the dataframe right? I ran it without and it was fine  
-
-
 findTurnovers <- function(gameCode, teamCode){
   opponentTurnovers <- teamGameStats2013 %>%
     setNames(make.names(names(.), unique = TRUE)) %>%
