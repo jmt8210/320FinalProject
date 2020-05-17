@@ -12,6 +12,10 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+
+## Project Setup
+
 ```{r libraries, message=FALSE}
 library(tidyverse)
 library(kableExtra)
@@ -19,18 +23,20 @@ library(cvTools)
 library(randomForest)
 ```
 
-## Project Setup
-
 For this project, we will be making use of the following libraries:
-* _tidyverse_ will be used for tidying and manupulating data.frames
-* _kableExtra_ will allow us print out useful tables
-* _cvTools_ will help us create folds in our data for predictive modeling
-* _random forest_ will allow us to use Random Forest modeling on our data
 
+- _tidyverse_ will be used for tidying and manupulating data.frames
+- _kableExtra_ will allow us print out useful tables
+- _cvTools_ will help us create folds in our data for predictive modeling
+- _random forest_ will allow us to use Random Forest modeling on our data
+
+## Data Management and Organization
+
+As our data was seperated by year, we needed to combine our tables. However, due to the combination of the now massive number of entities and attributes mapped for each entity, particularly within our Team-Game dataset, we needed to only select the attributes that we need for our work. To do this, we
 
 ```{r tableFunctions}
 
-#/-----------------------------------------------------------------------------------------------------------------------------------------/#
+#/---------------------------------------------------------------------------------------------------------------/#
 
 
 ## Functions in this section deal with selecting only data we need from large dataframes 
@@ -48,7 +54,7 @@ teamGameStatsSelect <- function (df){
 }
 
 
-#/-----------------------------------------------------------------------------------------------------------------------------------------/#
+#/---------------------------------------------------------------------------------------------------------------/#
 
 ## Functions in this section deal with adding attributes to the teamGameStats dataframe that require ##
 
@@ -143,13 +149,12 @@ mutateTOPDiff <- function(df){
   df
 }
 
-#/-----------------------------------------------------------------------------------------------------------------------------------------/#
+#/---------------------------------------------------------------------------------------------------------------/#
 
 ```
-
 ```{r tables, message=FALSE}
 
-#/-----------------------------------------------------------------------------------------------------------------------------------------/#
+#/---------------------------------------------------------------------------------------------------------------/#
 
 ## These tables hold data about the games - who's home, what the attendance is, etc. ##  
 
@@ -169,7 +174,7 @@ games2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game
 games <- rbind(games2005, games2006, games2007, games2008, games2009, games2010, games2011, games2012, games2013)
 
 
-#/-----------------------------------------------------------------------------------------------------------------------------------------/#
+#/---------------------------------------------------------------------------------------------------------------/#
 
 ## These dataframes hold data about how each team did in every game. It's most of the data we use in this project. ##
 
@@ -198,7 +203,7 @@ teamGameStats <- teamGameStats %>%
   mutate(firstDowns=(`1st Down Rush` + `1st Down Pass` + `1st Down Penalty`)) %>%
   
   # 'home' will tell us whether or not the team was home during that game
-  inner_join(games2013, by="Game Code") %>%
+  inner_join(games, by="Game Code") %>%
   mutate(home=(`Team Code` == `Home Team Code` & Site=="TEAM"))
   
 
@@ -208,7 +213,7 @@ teamGameStats <- teamGameStats %>%
   mutate(win=(opponentPoints<Points))
 
 
-#/-----------------------------------------------------------------------------------------------------------------------------------------/#
+#/---------------------------------------------------------------------------------------------------------------/#
 
 ## This dataframes hold per-carry rushing data, including yards per attempt, and which school it was done for ##
 
@@ -225,7 +230,7 @@ rushing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/ru
 rushing <- rbind(rushing2005, rushing2006, rushing2007, rushing2008, rushing2009, rushing2010, rushing2011, rushing2012, rushing2013)
 
 
-#/-----------------------------------------------------------------------------------------------------------------------------------------/#
+#/---------------------------------------------------------------------------------------------------------------/#
 
 ## These dataframes hold per-pass passing data, including yards for each attempt, and the school it was done for ##
 
@@ -242,7 +247,7 @@ passing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/pa
 passing <- rbind(passing2005, passing2006, passing2007, passing2008, passing2009, passing2010, passing2011, passing2012, passing2013)
 
 
-#/-----------------------------------------------------------------------------------------------------------------------------------------/#
+#/---------------------------------------------------------------------------------------------------------------/#
 
 ## These dataframes hold some meta-data about each team, including which confrence they're in and what their school name is. ##
 
@@ -259,7 +264,7 @@ teams2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team
 teams <- rbind(teams2005, teams2006, teams2007, teams2008, teams2009, teams2010, teams2011, teams2012, teams2013)
 
 
-#/-----------------------------------------------------------------------------------------------------------------------------------------/#
+#/---------------------------------------------------------------------------------------------------------------/#
 
 ## These dataframes hold some data about confreneces, including confrence-type, and name. ##
 
@@ -276,7 +281,7 @@ conference2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20
 conference <- rbind(conference2013, conference2012, conference2011, conference2010, conference2009, conference2008, conference2007, conference2006, conference2005)
 conference <- conference[match(unique(conference$`Conference Code`),conference$`Conference Code`),]
 
-#/-----------------------------------------------------------------------------------------------------------------------------------------/#
+#/---------------------------------------------------------------------------------------------------------------/#
 
 ## This code creates a new dataframe, containing the sum of total wins by each school ##
 
@@ -287,12 +292,8 @@ seasonWins <- teamGameStats %>%
 
 ```
 
-
-## Data Management and Organization
-
-As our data was seperated by year, we needed to combine our tables. However, due to the combination of the now massive number of entities and attributes mapped for each entity, particularly within our Team-Game dataset, we needed to only select the attributes that we need for our work. To do this, we
-
-1. Imported all of our indidivudal datasets
+1. Create some functions that we'll use for data organization
+2. Imported all of our indidivudal datasets
 2. Selected only the attributes that we needed our calculuations
 3. Used rbind() to concatenate all the datasets together
 4. Mutated new attributes for entities that combined/relied in on data from other entities
@@ -630,10 +631,13 @@ kable(avg_error_rates) %>%
 ### Time of Possession
 
 ```{r logisticRegressionTOP}
+
 testTable <- teamGameStats %>%
   select(timeOfPossesionDifferential, win)
+
 team_data <- testTable %>%
   na.omit()
+
 # Divide data set into 10 folds
 fold_indices <- cvFolds(n=nrow(testTable), K = 10)
 error_rates <- sapply(1:10, function(fold_index) {
@@ -811,12 +815,15 @@ kable(avg_error_rates) %>%
 ```
 
 ### Random Forest - Turnovers
-```{r randomForestTurnovers, message=FALSE}
+```{r randomForestTurnovers, message=FALSE, echo=FALSE}
 testTable <- teamGameStats %>%
   select(turnoverDiff, win)
+
 team_data <- testTable
+
 # Divide data set into 10 folds
 fold_indices <- cvFolds(n=nrow(testTable), K = 10)
+
 error_rates <- sapply(1:10, function(fold_index) {
   test_indices <- which(fold_indices$which == fold_index)
   # Get test and training set
@@ -830,13 +837,16 @@ error_rates <- sapply(1:10, function(fold_index) {
   
   logis_error
 })
+
 avg_error_rates <- as.data.frame(t(error_rates)) %>%
   mutate(fold=1:n()) %>%
   gather(method,error,-fold) %>%
   # Get the average error rate
   summarize(error = mean(error))
+
 kable(avg_error_rates) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
 ```
 
 ### Random Forest - Home Field Advantage
