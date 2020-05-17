@@ -21,13 +21,70 @@ library(cvTools)
 
 
 ```{r tables, message=FALSE}
-attendance2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game-statistics.csv")
+
+teamGameStats2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/team-game-statistics.csv")
+teamGameStats2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/team-game-statistics.csv")
+teamGameStats2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/team-game-statistics.csv")
+teamGameStats2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/team-game-statistics.csv")
+teamGameStats2009 <- read_csv("college-football-statistics/cfbstats-com-2009-1-5-0/team-game-statistics.csv")
+teamGameStats2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/team-game-statistics.csv")
+teamGameStats2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/team-game-statistics.csv")
+teamGameStats2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/team-game-statistics.csv")
 teamGameStats2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team-game-statistics.csv")
+
+rushing2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/rush.csv")
+rushing2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/rush.csv")
+rushing2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/rush.csv")
+rushing2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/rush.csv")
+rushing2009 <- read_csv("college-football-statistics/cfbstats-com-2009-1-5-0/rush.csv")
+rushing2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/rush.csv")
+rushing2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/rush.csv")
+rushing2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/rush.csv")
 rushing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/rush.csv")
+
+passing2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/pass.csv")
+passing2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/pass.csv")
+passing2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/pass.csv")
+passing2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/pass.csv")
+passing2009 <- read_csv("college-football-statistics/cfbstats-com-2009-1-5-0/pass.csv")
+passing2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/pass.csv")
+passing2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/pass.csv")
+passing2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/pass.csv")
 passing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/pass.csv")
+
+teams2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/team.csv")
+teams2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/team.csv")
+teams2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/team.csv")
+teams2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/team.csv")
+teams2009 <- read_csv("college-football-statistics/cfbstats-com-2009-1-5-0/team.csv")
+teams2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/team.csv")
+teams2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/team.csv")
+teams2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/team.csv")
 teams2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team.csv")
+
+games2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/game.csv")
+games2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/game.csv")
+games2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/game.csv")
+games2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/game.csv")
+games2009 <- read_csv("college-football-statistics/cfbstats-com-2009-1-5-0/game.csv")
+games2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/game.csv")
+games2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/game.csv")
+games2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/game.csv")
 games2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game.csv")
-confrence2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/conference.csv")
+
+conference2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/conference.csv")
+conference2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/conference.csv")
+conference2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/conference.csv")
+conference2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/conference.csv")
+conference2009 <- read_csv("college-football-statistics/cfbstats-com-2009-1-5-0/conference.csv")
+conference2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/conference.csv")
+conference2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/conference.csv")
+conference2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/conference.csv")
+conference2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/conference.csv")
+
+conference <- rbind(conference2005, conference2006, conference2007, conference2008, conference2009, conference2010, conference2011, conference2012, conference2013)
+conference <- conference[match(unique(conference$`Conference Code`),conference$`Conference Code`),]
+
 #Todo: Import all tables, and concat the tables with rbind()
 ```
 
@@ -97,10 +154,10 @@ passing2013 %>%
 
 ### Wins For Team by Conference
 ```{r winsExploration}
-# See total wins for each team, seperated by confrence
+# See total wins for each team, seperated by conference
 seasonWins2013 %>%
   inner_join(teams2013, by="Team Code") %>%
-  inner_join(confrence2013, by="Conference Code") %>%
+  inner_join(conference2013, by="Conference Code") %>%
   filter(Subdivision=="FBS") %>%
   ggplot(aes(x=reorder(factor(Name.x), Wins), y=Wins, color=Name.y)) +
   geom_point() +
@@ -247,7 +304,7 @@ teamGameStats2013 %>%
 ```{r penalties}
 teamGameStats2013 %>%
   inner_join(teams2013, by="Team Code") %>%
-  inner_join(confrence2013, by="Conference Code") %>%
+  inner_join(conference2013, by="Conference Code") %>%
   ggplot(aes(x=win, y=Penalty)) + geom_violin()
 ```
 
