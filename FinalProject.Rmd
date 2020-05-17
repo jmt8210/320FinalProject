@@ -150,7 +150,7 @@ teamGameStats2013 %>%
 ```
 
 
-### Rushing Yards per Attempt
+## Rushing Yards per Attempt
 
 Next, we wanted to see how effective different progams were on run plays. To do this, we used a grouped together from 5 historically great college football teams... and Maryland, and compared their rushing yards per play with a violin plot. *_*
 
@@ -203,6 +203,8 @@ seasonWins2013 %>%
 ```
 
 # What variable influences wins the most?
+
+
 
 ## Test variables {.tabset}
 
