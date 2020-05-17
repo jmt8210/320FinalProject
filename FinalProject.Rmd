@@ -14,10 +14,18 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r libraries, message=FALSE}
 library(tidyverse)
-library(caret)
 library(kableExtra)
 library(cvTools)
+library(randomForest)
 ```
+
+## Project Setup
+
+For this project, we will be making use of the following libraries:
+* _tidyverse_ will be used for tidying and manupulating data.frames
+* _kableExtra_ will allow us print out useful tables
+* _cvTools_ will help us create folds in our data for predictive modeling
+* _random forest_ will allow us to use Random Forest modeling on our data
 
 
 ```{r tables, message=FALSE}
@@ -82,11 +90,21 @@ conference2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/
 conference2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/conference.csv")
 conference2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/conference.csv")
 
-conference <- rbind(conference2005, conference2006, conference2007, conference2008, conference2009, conference2010, conference2011, conference2012, conference2013)
+conference <- rbind(conference2013, conference2012, conference2011, conference2010, conference2009, conference2008, conference2007, conference2006, conference2005)
 conference <- conference[match(unique(conference$`Conference Code`),conference$`Conference Code`),]
 
 #Todo: Import all tables, and concat the tables with rbind()
 ```
+
+## Data Management and Organization
+
+As our data was seperated by year, we needed to combine our tables. However, due to the combination of the now massive number of entities and attributes mapped for each entity, particularly within our Team-Game dataset, we needed to only select the attributes that we need for our work. To do this, we
+
+1. Imported all of our indidivudal datasets
+2. Selected only the attributes that we needed our calculuations
+3. Used rbind() to concatenate all the datasets together
+4. Mutated new attributes for entities that combined/relied in on data from other entities
+5. Selected the data that we still needed and removed the attributes we needed for our new, mutated ones
 
 ```{r organizeData}
 findPoints <- function(gameCode, teamCode){
@@ -95,6 +113,9 @@ findPoints <- function(gameCode, teamCode){
     select(Points)
   as.double(opponentPoints[1,1])
 }
+
+nextCol = ncol(teamGameStats)
+
 for(i in 1:nrow(teamGameStats2013)){
   teamGameStats2013[i,69] = findPoints(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
 }
@@ -108,10 +129,16 @@ seasonWins2013 <- teamGameStats2013 %>%
 ```
 
 
-## Interesting Visualizations {.tabset}
+## Interesting Visualizations
 
+To get familiar with our dataset, and to make some interesting observations about our data, we decided to do some exploratory data analysis.
+
+{.tabset}
 ### PPG vs Total Yards
-```{r graph}
+
+Rationally speaking, if you have more yards, that should correlate to more times that your team has marched down to the end-zone, or at least gotten close. In this graph, we can see that this theory generally holds true, following around a linear regression. This proves that there is correlation between Yards per Game and Points per Game.
+
+```{r yardsToPoints}
 # See points scored per game per each number of total yardage
 teamGameStats2013 %>%
   ggplot((aes(x=(`Rush Yard`+`Pass Yard`+`Kickoff Ret Yard`+`Punt Ret Yard`+`Misc Ret Yard`+`Int Ret Yard`+`Fum Ret Yard`), y=Points))) +
@@ -124,6 +151,9 @@ teamGameStats2013 %>%
 
 
 ### Rushing Yards per Attempt
+
+Next, we wanted to see how effective different progams were on run plays. To do this, we used a grouped together from 5 historically great college football teams... and Maryland, and compared their rushing yards per play with a violin plot. *_*
+
 ```{r rushingExploration}
 # See the distribution of rushing yards per attempt by several top football schools
 rushing2013 %>%
@@ -139,6 +169,9 @@ rushing2013 %>%
 
 
 ### Passing Yards per Attempt
+
+Much like the rushing yards per attempt, this graph shows the distribution of passing yards per attempt for the same top schools listed in the rushing attempts.
+
 ```{r passingExploration}
 # See the distribution of passing yards per attempt by top football schools
 passing2013 %>%
@@ -153,13 +186,16 @@ passing2013 %>%
 ```
 
 ### Wins For Team by Conference
+
+For this graph, we wanted to the distribution of wins for each team per year, to see which teams are historically good, and the dsitributions of teams at certain numbers of wins.
+
 ```{r winsExploration}
 # See total wins for each team, seperated by conference
 seasonWins2013 %>%
   inner_join(teams2013, by="Team Code") %>%
   inner_join(conference2013, by="Conference Code") %>%
   filter(Subdivision=="FBS") %>%
-  ggplot(aes(x=reorder(factor(Name.x), Wins), y=Wins, color=Name.y)) +
+  ggplot(aes(x=reorder(factor(Name.x), Wins), y=(Wins/8), color=Name.y)) +
   geom_point() +
   labs(x="Team") +
   theme(axis.text.x=element_blank())
