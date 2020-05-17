@@ -30,27 +30,125 @@ For this project, we will be making use of the following libraries:
 
 ```{r tables, message=FALSE}
 
-teamGameStats2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/team-game-statistics.csv")
-teamGameStats2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/team-game-statistics.csv")
-teamGameStats2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/team-game-statistics.csv")
-teamGameStats2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/team-game-statistics.csv")
-teamGameStats2009 <- read_csv("college-football-statistics/cfbstats-com-2009-1-5-0/team-game-statistics.csv")
-teamGameStats2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/team-game-statistics.csv")
-teamGameStats2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/team-game-statistics.csv")
-teamGameStats2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/team-game-statistics.csv")
-teamGameStats2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team-game-statistics.csv")
+games2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/game.csv")
+games2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/game.csv")
+games2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/game.csv")
+games2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/game.csv")
+games2009 <- read_csv("college-football-statistics/cfbstats-com-2009-1-5-0/game.csv")
+games2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/game.csv")
+games2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/game.csv")
+games2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/game.csv")
+games2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game.csv")
 
-rushing2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/rush.csv")
-rushing2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/rush.csv")
-rushing2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/rush.csv")
-rushing2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/rush.csv")
-rushing2009 <- read_csv("college-football-statistics/cfbstats-com-2009-1-5-0/rush.csv")
-rushing2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/rush.csv")
-rushing2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/rush.csv")
-rushing2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/rush.csv")
-rushing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/rush.csv")
+games <- rbind(games2005, games2006, games2007, games2008, games2009, games2010, games2011, games2012, games2013)
 
-passing2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/pass.csv")
+teamGameStatsSelect <- function (df){
+  df %>%
+    select(`Game Code`, `Team Code`, `Points`, `Rush Yard`, `Pass Yard`, `Kickoff Ret Yard`, `Punt Ret Yard`, `Misc Ret Yard`, `Int Ret Yard`, `Fum Ret Yard`, `Pass Int`, `Fumble Lost`, `Punt`, `Penalty`, `1st Down Rush`, `1st Down Pass`, `1st Down Penalty`, `Time Of Possession`) 
+}
+
+
+teamGameStats2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/team-game-statistics.csv") %>% teamGameStatsSelect()
+teamGameStats2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/team-game-statistics.csv") %>% teamGameStatsSelect()
+teamGameStats2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/team-game-statistics.csv") %>% teamGameStatsSelect()
+teamGameStats2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/team-game-statistics.csv") %>% teamGameStatsSelect()
+teamGameStats2009 <- read_csv("college-football-statistics/cfbstats-com-2009-1-5-0/team-game-statistics.csv") %>% teamGameStatsSelect()
+teamGameStats2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/team-game-statistics.csv") %>% teamGameStatsSelect()
+teamGameStats2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/team-game-statistics.csv") %>% teamGameStatsSelect()
+teamGameStats2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/team-game-statistics.csv") %>% teamGameStatsSelect()
+teamGameStats2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team-game-statistics.csv") %>% teamGameStatsSelect()
+teamGameStats <- rbind(teamGameStats2005, teamGameStats2006, teamGameStats2007, teamGameStats2008, teamGameStats2009, teamGameStats2010, teamGameStats2011, teamGameStats2012, teamGameStats2013) %>%
+  mutate(yardsFor=`Rush Yard`+`Pass Yard`+`Kickoff Ret Yard`+`Punt Ret Yard`+`Misc Ret Yard`+`Int Ret Yard`+`Fum Ret Yard`) %>%
+  inner_join(games2013, by="Game Code") %>%
+  mutate(home=(`Team Code` == `Home Team Code` & Site=="TEAM")) %>%
+  mutate(firstDowns=(`1st Down Rush` + `1st Down Pass` + `1st Down Penalty`))
+
+findYards <- function(gameCode, teamCode){
+  opponentYards <- teamGameStats %>%
+    filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
+    select(`Rush Yard`,`Pass Yard`,`Kickoff Ret Yard`,`Punt Ret Yard`,`Misc Ret Yard`,`Int Ret Yard`,`Fum Ret Yard`)
+  as.double(opponentYards[1,1]+opponentYards[1,2]+opponentYards[1,3]+opponentYards[1,4]+opponentYards[1,5]+opponentYards[1,6]+opponentYards[1,7])
+}
+
+colNum <- ncol(teamGameStats) + 1
+
+for(i in 1:nrow(teamGameStats)){
+  teamGameStats[i,colNum] = findYards(as.character(teamGameStats[i,"Game Code"]), as.double(teamGameStats[i,"Team Code"]))
+}
+
+names(teamGameStats)[colNum] <- "yardsAgainst"
+
+
+colNum <- ncol(teamGameStats) + 1
+
+findPoints <- function(gameCode, teamCode){
+  opponentPoints <- teamGameStats %>%
+    filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
+    select(Points)
+  as.double(opponentPoints[1,1])
+}
+for(i in 1:nrow(teamGameStats)){
+  teamGameStats[i,colNum] = findPoints(as.character(teamGameStats[i,"Game Code"]), as.double(teamGameStats[i,"Team Code"]))
+}
+names(teamGameStats)[colNum] <- "opponentPoints"
+
+
+findTurnovers <- function(gameCode, teamCode){
+  opponentTurnovers <- teamGameStats %>%
+    setNames(make.names(names(.), unique = TRUE)) %>%
+    filter(Game.Code == gameCode & Team.Code != teamCode) %>%
+    select(Pass.Int, Fumble.Lost, Punt)
+  as.double(opponentTurnovers[1,1] + opponentTurnovers[1,2], + opponentTurnovers[1,3])
+}
+
+colNum <- ncol(teamGameStats) + 1
+
+for(i in 1:nrow(teamGameStats)){
+  teamGameStats[i, colNum] = (teamGameStats[i, "Pass Int"] + teamGameStats[i, "Fumble Lost"] + teamGameStats[i, "Punt"]) - findTurnovers(as.character(teamGameStats[i,"Game Code"]), as.double(teamGameStats[i,"Team Code"]))
+}
+
+names(teamGameStats)[colNum] <- "turnoverDiff"
+
+findTOP <- function(gameCode, teamCode){
+  opponentTOP <- teamGameStats %>%
+    setNames(make.names(names(.), unique = TRUE)) %>%
+    filter(Game.Code == gameCode & Team.Code != teamCode) %>%
+    select(Time.Of.Possession)
+  as.double(opponentTOP[1,1])
+}
+
+colNum <- ncol(teamGameStats) + 1
+
+for(i in 1:nrow(teamGameStats)){
+  teamGameStats[i,colNum] = teamGameStats[i, "Time Of Possession"] - findTOP(as.character(teamGameStats[i,"Game Code"]), as.double(teamGameStats[i,"Team Code"]))
+}
+
+names(teamGameStats)[colNum] <- "timeOfPossesionDifferential"
+
+teamGameStats <- teamGameStats %>% 
+  mutate(win=(opponentPoints<Points))
+
+
+
+rushPassSelect <- function(df){
+  df %>%
+    select(`Team Code`, Yards)
+}
+
+rushing2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/rush.csv") %>% rushPassSelect()
+rushing2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/rush.csv") %>% rushPassSelect()
+rushing2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/rush.csv") %>% rushPassSelect()
+rushing2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/rush.csv") %>% rushPassSelect()
+rushing2009 <- read_csv("college-football-statistics/cfbstats-com-2009-1-5-0/rush.csv") %>% rushPassSelect()
+rushing2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/rush.csv") %>% rushPassSelect()
+rushing2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/rush.csv") %>% rushPassSelect()
+rushing2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/rush.csv") %>% rushPassSelect()
+rushing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/rush.csv") %>% rushPassSelect()
+
+rushing <- rbind(rushing2005, rushing2006, rushing2007, rushing2008, rushing2009, rushing2010, rushing2011, rushing2012, rushing2013)
+
+
+passing2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/pass.csv") 
 passing2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/pass.csv")
 passing2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/pass.csv")
 passing2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/pass.csv")
@@ -59,6 +157,8 @@ passing2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/pas
 passing2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/pass.csv")
 passing2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/pass.csv")
 passing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/pass.csv")
+
+passing <- rbind(passing2005, passing2006, passing2007, passing2008, passing2009, passing2010, passing2011, passing2012, passing2013)
 
 teams2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/team.csv")
 teams2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/team.csv")
@@ -70,17 +170,10 @@ teams2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/team.
 teams2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/team.csv")
 teams2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team.csv")
 
-games2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/game.csv")
-games2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/game.csv")
-games2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/game.csv")
-games2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/game.csv")
-games2009 <- read_csv("college-football-statistics/cfbstats-com-2009-1-5-0/game.csv")
-games2010 <- read_csv("college-football-statistics/cfbstats-com-2010-1-5-0/game.csv")
-games2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/game.csv")
-games2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/game.csv")
-games2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game.csv")
+teams <- rbind(teams2005, teams2006, teams2007, teams2008, teams2009, teams2010, teams2011, teams2012, teams2013)
 
-conference2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/conference.csv")
+
+conference2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/conference.csv") %>% select()
 conference2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/conference.csv")
 conference2007 <- read_csv("college-football-statistics/cfbstats-com-2007-1-5-0/conference.csv")
 conference2008 <- read_csv("college-football-statistics/cfbstats-com-2008-1-5-0/conference.csv")
@@ -107,22 +200,7 @@ As our data was seperated by year, we needed to combine our tables. However, due
 5. Selected the data that we still needed and removed the attributes we needed for our new, mutated ones
 
 ```{r organizeData}
-findPoints <- function(gameCode, teamCode){
-  opponentPoints <- teamGameStats2013 %>%
-    filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
-    select(Points)
-  as.double(opponentPoints[1,1])
-}
-
-nextCol = ncol(teamGameStats)
-
-for(i in 1:nrow(teamGameStats2013)){
-  teamGameStats2013[i,69] = findPoints(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
-}
-names(teamGameStats2013)[69] <- "opponentPoints"
-teamGameStats2013 <- teamGameStats2013 %>%
-  mutate(win=opponentPoints<Points)
-seasonWins2013 <- teamGameStats2013 %>%
+seasonWins <- teamGameStats %>%
   filter(win == TRUE) %>%
   group_by(`Team Code`) %>%
   summarize(Wins=n())
@@ -138,10 +216,11 @@ To get familiar with our dataset, and to make some interesting observations abou
 
 Rationally speaking, if you have more yards, that should correlate to more times that your team has marched down to the end-zone, or at least gotten close. In this graph, we can see that this theory generally holds true, following around a linear regression. This proves that there is correlation between Yards per Game and Points per Game.
 
+
 ```{r yardsToPoints}
 # See points scored per game per each number of total yardage
-teamGameStats2013 %>%
-  ggplot((aes(x=(`Rush Yard`+`Pass Yard`+`Kickoff Ret Yard`+`Punt Ret Yard`+`Misc Ret Yard`+`Int Ret Yard`+`Fum Ret Yard`), y=Points))) +
+teamGameStats %>%
+  ggplot((aes(x=yardsFor, y=Points))) +
   geom_point() +
   geom_smooth(method=lm) +
   labs(x="Total Yards",
@@ -156,7 +235,7 @@ Next, we wanted to see how effective different progams were on run plays. To do 
 
 ```{r rushingExploration}
 # See the distribution of rushing yards per attempt by several top football schools
-rushing2013 %>%
+rushing %>%
   filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
   inner_join(teams2013, by="Team Code") %>%
   ggplot(aes(x=reorder(factor(Name), Yards), y=Yards, color=Name)) +
@@ -174,8 +253,8 @@ Much like the rushing yards per attempt, this graph shows the distribution of pa
 
 ```{r passingExploration}
 # See the distribution of passing yards per attempt by top football schools
-passing2013 %>%
-  inner_join(teams2013, by="Team Code") %>%
+passing %>%
+  inner_join(teams, by="Team Code") %>%
   filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
   ggplot(aes(x=reorder(factor(Name), Yards), y=Yards, color=Name)) + 
   labs(x="",
@@ -191,15 +270,14 @@ For this graph, we wanted to the distribution of wins for each team per year, to
 
 ```{r winsExploration}
 # See total wins for each team, seperated by conference
-seasonWins2013 %>%
-  inner_join(teams2013, by="Team Code") %>%
-  inner_join(conference2013, by="Conference Code") %>%
+seasonWins %>%
+  inner_join(teams, by="Team Code") %>%
+  inner_join(conference, by="Conference Code") %>%
   filter(Subdivision=="FBS") %>%
   ggplot(aes(x=reorder(factor(Name.x), Wins), y=(Wins/8), color=Name.y)) +
   geom_point() +
   labs(x="Team") +
   theme(axis.text.x=element_blank())
-# I added a reorder to the above plot, I'm not sure if it helps or not, I just couldn't come to any conclusions from the graph before.
 ```
 
 # What variable influences wins the most?
@@ -212,10 +290,7 @@ seasonWins2013 %>%
 ### Yards For
 
 ```{r yardsFor}
-teamGameStats2013 <- teamGameStats2013 %>%
-  mutate(yardsFor=`Rush Yard`+`Pass Yard`+`Kickoff Ret Yard`+`Punt Ret Yard`+`Misc Ret Yard`+`Int Ret Yard`+`Fum Ret Yard`)
-
-teamGameStats2013 %>%
+teamGameStats %>%
   ggplot(aes(x=win, y=yardsFor)) + 
   geom_violin()
 ```
@@ -224,21 +299,7 @@ teamGameStats2013 %>%
 ### Yards Against
 
 ```{r yardsAgainst}
-findYards <- function(gameCode, teamCode){
-  opponentYards <- teamGameStats2013 %>%
-    filter(`Game Code` == gameCode & `Team Code` != teamCode) %>%
-    select(`Rush Yard`,`Pass Yard`,`Kickoff Ret Yard`,`Punt Ret Yard`,`Misc Ret Yard`,`Int Ret Yard`,`Fum Ret Yard`)
-  as.double(opponentYards[1,1]+opponentYards[1,2]+opponentYards[1,3]+opponentYards[1,4]+opponentYards[1,5]+opponentYards[1,6]+opponentYards[1,7])
-}
-
-colNum <- ncol(teamGameStats2013) + 1
-
-for(i in 1:nrow(teamGameStats2013)){
-  teamGameStats2013[i,colNum] = findYards(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
-}
-
-names(teamGameStats2013)[colNum] <- "yardsAgainst"
-teamGameStats2013 %>%
+teamGameStats %>%
   ggplot(aes(x=win, y=yardsAgainst)) + 
   geom_violin()  +
   labs()
@@ -247,22 +308,8 @@ teamGameStats2013 %>%
 ### Turnovers
 
 ```{r turnovers}
-findTurnovers <- function(gameCode, teamCode){
-  opponentTurnovers <- teamGameStats2013 %>%
-    setNames(make.names(names(.), unique = TRUE)) %>%
-    filter(Game.Code == gameCode & Team.Code != teamCode) %>%
-    select(Pass.Int, Fumble.Lost, Punt)
-  as.double(opponentTurnovers[1,1] + opponentTurnovers[1,2], + opponentTurnovers[1,3])
-}
 
-colNum <- ncol(teamGameStats2013) + 1
-
-for(i in 1:nrow(teamGameStats2013)){
-  teamGameStats2013[i, colNum] = (teamGameStats2013[i, 45] + teamGameStats2013[i, 10] + teamGameStats2013[i, 37]) - findTurnovers(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
-}
-
-names(teamGameStats2013)[colNum] <- "turnoverDiff"
-teamGameStats2013 %>%
+teamGameStats %>%
   ggplot(aes(x=win, y=turnoverDiff)) + 
   geom_violin() +
   labs(x="Win",
@@ -275,10 +322,7 @@ teamGameStats2013 %>%
 ### Home Field Advantage
 
 ```{r homeFieldAdvantage}
-teamGameStats2013 <- teamGameStats2013 %>%
-  inner_join(games2013, by="Game Code") %>%
-  mutate(home=(`Team Code` == `Home Team Code` & Site=="TEAM"))
-teamGameStats2013 %>%
+teamGameStats %>%
   group_by(home, win) %>%
   summarize(count=n()) %>%
   ggplot(aes(x=win, y=count, fill=home)) + 
@@ -296,10 +340,7 @@ teamGameStats2013 %>%
 ### First Downs
 
 ```{r firstDowns}
-teamGameStats2013 <- teamGameStats2013 %>%
-  mutate(firstDowns=(`1st Down Rush` + `1st Down Pass` + `1st Down Penalty`))
-
-teamGameStats2013 %>%
+teamGameStats %>%
   ggplot(aes(x=win, y=firstDowns)) + 
   geom_violin() +
   labs(x="Win",
@@ -312,22 +353,7 @@ teamGameStats2013 %>%
 ### Time of Possesion Differential
 
 ```{r timeOfPossession}
-findTOP <- function(gameCode, teamCode){
-  opponentTOP <- teamGameStats2013 %>%
-    setNames(make.names(names(.), unique = TRUE)) %>%
-    filter(Game.Code == gameCode & Team.Code != teamCode) %>%
-    select(Time.Of.Possession)
-  as.double(opponentTOP[1,1])
-}
-
-colNum <- ncol(teamGameStats2013) + 1
-
-for(i in 1:nrow(teamGameStats2013)){
-  teamGameStats2013[i,colNum] = teamGameStats2013[i, 59] - findTOP(as.character(teamGameStats2013[i,2]), as.double(teamGameStats2013[i,1]))
-}
-
-names(teamGameStats2013)[colNum] <- "timeOfPossesionDifferential"
-teamGameStats2013 %>%
+teamGameStats %>%
   ggplot(aes(x=win, y=timeOfPossesionDifferential)) + 
   geom_violin() +
   labs(x="Win",
@@ -340,9 +366,9 @@ teamGameStats2013 %>%
 ### Penalties
 
 ```{r penalties}
-teamGameStats2013 %>%
-  inner_join(teams2013, by="Team Code") %>%
-  inner_join(conference2013, by="Conference Code") %>%
+teamGameStats %>%
+  inner_join(teams, by="Team Code") %>%
+  inner_join(conference, by="Conference Code") %>%
   ggplot(aes(x=win, y=Penalty)) + geom_violin()
 ```
 
@@ -351,7 +377,7 @@ teamGameStats2013 %>%
 ### Yards For
 
 ```{r logisticRegressionYardsFor}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(yardsFor, win)
 team_data <- testTable %>%
   na.omit()
@@ -382,7 +408,7 @@ kable(avg_error_rates) %>%
 ### Yards Against
 
 ```{r logisticRegressionYardsAgainst}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(yardsAgainst, win)
 team_data <- testTable %>%
   na.omit()
@@ -413,7 +439,7 @@ kable(avg_error_rates) %>%
 ### Turnovers
 
 ```{r logisticRegressionTurnovers}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(turnoverDiff, win)
 team_data <- testTable %>%
   na.omit()
@@ -444,7 +470,7 @@ kable(avg_error_rates) %>%
 ### Home Field Advantage
 
 ```{r logisitcRegression}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(home, win)
 team_data <- testTable %>%
   na.omit()
@@ -475,7 +501,7 @@ kable(avg_error_rates) %>%
 ### First Downs
 
 ```{r logisticRegressionFirstDowns}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(firstDowns, win)
 
 team_data <- testTable %>%
@@ -512,7 +538,7 @@ kable(avg_error_rates) %>%
 ### Time of Possession
 
 ```{r logisticRegressionTOP}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(timeOfPossesionDifferential, win)
 team_data <- testTable %>%
   na.omit()
@@ -544,7 +570,7 @@ kable(avg_error_rates) %>%
 ### Penalties
 
 ```{r logisticRegressionPenalties}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(Penalty, win)
 team_data <- testTable %>%
   na.omit()
@@ -575,7 +601,7 @@ kable(avg_error_rates) %>%
 ### All
 
 ```{r logisticRegressionAll}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, Penalty, win)
 team_data <- testTable %>%
   na.omit()
@@ -607,7 +633,7 @@ kable(avg_error_rates) %>%
 
 ### Random Forest - All
 ```{r randomForestAll}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, Penalty, win)
 team_data <- testTable
 # Divide data set into 10 folds
@@ -636,7 +662,7 @@ kable(avg_error_rates) %>%
 
 ### Random Forest - Yards For
 ```{r randomForestYardsFor}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(yardsFor, win)
 team_data <- testTable
 # Divide data set into 10 folds
@@ -665,7 +691,7 @@ kable(avg_error_rates) %>%
 
 ### Random Forest - Yards Against
 ```{r randomForestYardsAgainst}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(yardsAgainst, win)
 team_data <- testTable
 # Divide data set into 10 folds
@@ -694,7 +720,7 @@ kable(avg_error_rates) %>%
 
 ### Random Forest - Turnovers
 ```{r randomForestTurnovers}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(turnoverDiff, win)
 team_data <- testTable
 # Divide data set into 10 folds
@@ -723,7 +749,7 @@ kable(avg_error_rates) %>%
 
 ### Random Forest - Home Field Advantage
 ```{r randomForestHome}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(home, win)
 team_data <- testTable
 # Divide data set into 10 folds
@@ -753,7 +779,7 @@ kable(avg_error_rates) %>%
 
 ### Random Forest - First Downs
 ```{r randomForestFirstDowns}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(firstDowns, win)
 
 team_data <- testTable
@@ -783,7 +809,7 @@ kable(avg_error_rates) %>%
 
 ### Random Forest - Time of Possession
 ```{r randomForestTimeOfPossession}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(timeOfPossesionDifferential, win)
 team_data <- testTable
 # Divide data set into 10 folds
@@ -812,7 +838,7 @@ kable(avg_error_rates) %>%
 
 ### Random Forest - Penalty
 ```{r randomForestPenalty}
-testTable <- teamGameStats2013 %>%
+testTable <- teamGameStats %>%
   select(Penalty, win)
 team_data <- testTable
 # Divide data set into 10 folds
