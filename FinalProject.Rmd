@@ -14,7 +14,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-College Football has become the backbone of many college athletics programs. 
+College Football has become the backbone of many college athletics programs. With greater revenue than the next 14 college sports _combined_, NCAA Football regually draws more fans and viewship than other major professional sports league.
+
+Which game statistic is the best indicator of a win?
 
 ## Project Setup
 
