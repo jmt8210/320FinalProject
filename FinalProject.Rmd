@@ -12,6 +12,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Introduction
+
 
 
 ## Project Setup
@@ -28,7 +30,7 @@ For this project, we will be making use of the following libraries:
 - _tidyverse_ will be used for tidying and manupulating data.frames
 - _kableExtra_ will allow us print out useful tables
 - _cvTools_ will help us create folds in our data for predictive modeling
-- _random forest_ will allow us to use Random Forest modeling on our data
+- _randomForest_ will allow us to use Random Forest modeling on our data
 
 ## Data Management and Organization
 
@@ -152,6 +154,7 @@ mutateTOPDiff <- function(df){
 #/---------------------------------------------------------------------------------------------------------------/#
 
 ```
+
 ```{r tables, message=FALSE}
 
 #/---------------------------------------------------------------------------------------------------------------/#
@@ -291,7 +294,6 @@ seasonWins <- teamGameStats %>%
   summarize(Wins=n())
 
 ```
-
 1. Create some functions that we'll use for data organization
 2. Imported all of our indidivudal datasets
 2. Selected only the attributes that we needed our calculuations
@@ -300,11 +302,11 @@ seasonWins <- teamGameStats %>%
 5. Selected the data that we still needed and removed the attributes we needed for our new, mutated ones
 
 
-## Interesting Visualizations
+## Interesting Visualizations {.tabset}
 
 To get familiar with our dataset, and to make some interesting observations about our data, we decided to do some exploratory data analysis.
 
-{.tabset}
+
 ### PPG vs Total Yards
 
 Rationally speaking, if you have more yards, that should correlate to more times that your team has marched down to the end-zone, or at least gotten close. In this graph, we can see that this theory generally holds true, following around a linear regression. This proves that there is correlation between Yards per Game and Points per Game.
@@ -958,6 +960,7 @@ error_rates <- sapply(1:10, function(fold_index) {
   
   logis_error
 })
+
 avg_error_rates <- as.data.frame(t(error_rates)) %>%
   mutate(fold=1:n()) %>%
   gather(method,error,-fold) %>%
