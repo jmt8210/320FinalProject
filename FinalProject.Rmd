@@ -513,7 +513,8 @@ Each of the prediction types, random forest, and logistic regression, will be te
 #### Random Forest
 
 ```{r randomForestError, warning=FALSE}
-
+#Seed list: 6, 8
+set.seed(6)
 regressionData <- teamGameStats %>%
   select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, win)
 folds <- cvFolds(n=nrow(regressionData), K = 10)
@@ -545,11 +546,11 @@ for(i in 1:10) {
 data.frame("Logistic Error"=mean(error))
 ```
 
-Surprisingly, our logistic model has even better error than our random forest model, with an error of ~.186! Beyond this, the runtime for this is significantly lower, point to this as the superior model. Based on this analysis, and some comparisons between individual predictors with both models not included in this code, we will be using logistic regression to predict our games from here on out.
+Surprisingly, our logistic model has even better error than our random forest model, with an error of about .190. Beyond this, the runtime for this is significantly lower, point to this as the superior model. Based on this analysis, and some comparisons between individual predictors with both models not included in this code, we will be using logistic regression to predict our games from here on out.
 
 ## Prediction Error For Each Variable {.tabset}
 
-For each of the previous variables, we will run a regression model using logistic regression to determine whether the variable could be a valid predictor of a team winning a game based on the stats in that category at the end of the game. These predictions can then be used to conclude which is most important in determining the outcome of a game, which will later be used to determine the accuracy of our prediction model. 
+For each of the previous variables, we will run a regression model using logistic regression to determine whether the variable could be a valid predictor of a team winning a game based on the stats in that category at the end of the game. These predictions can then be used to conclude which is most important in determining the outcome of a game. 
 
 ### Yards For
 
@@ -567,6 +568,9 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
+The amount of yards a team gained over the course of the game was able to predict the winner of the game 62.5% of the time. This means that yards for is a good predictor for wins. 
+
+
 ### Yards Against
 
 ```{r yardsAgainstError, warning=FALSE}
@@ -582,6 +586,8 @@ for(i in 1:10) {
 }
 data.frame(Error=mean(error))
 ```
+
+The amount of yards an opponent gained over the course of the game was able to predict the winner of the game about 64.1% of the time. This means that yards against is a good predictor for wins.
 
 ### Turnovers
 
@@ -599,6 +605,8 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
+The difference in times the team gave up the ball and the opponent gave up the ball had a 74.4% chance of determining the winner. This means that turnovers are a good predictor for wins.
+
 ### Home Field Advantage
 
 ```{r homeFieldError, warning=FALSE}
@@ -614,6 +622,8 @@ for(i in 1:10) {
 }
 data.frame(Error=mean(error))
 ```
+
+Whether or not a team was home predicted the winner of a game 62% of the time. This means that home field advantage is a good predictor of wins.
 
 ### First Downs
 
@@ -631,6 +641,8 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
+Amount of first downs achieved by a team predicted the outcome of a game correctly 61.4% of the time, meaning it is a good predictor of wins.
+
 ### Time of Possession
 
 ```{r TOPError, warning=FALSE}
@@ -646,6 +658,8 @@ for(i in 1:10) {
 }
 data.frame(Error=mean(error))
 ```
+
+Amount of time spent of on offense was able to predict the winner of a game 57.4% of the time. This means that time of possession is a good predictor of wins.
 
 ### Penalties
 
@@ -663,7 +677,15 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
+Number of total penalties by a team was only able to predict the winner 50% of the time. This means that penalties is not a good predictor of wins.
+
 # Conclusion
 
-The value of the error shows that the model can predict the winner of games about 90% of the time. This is a significant value that shows that the most important factors in winning a football game are the total yards for each team, the difference in turnovers between teams, whether a team is home or away, and the length of time that a team spends on offense.
+Based on these predictions, it seems that yards for and yards against are the biggest indicators of a team winning or losing a game. Specifically, the yards a team gains leads to more chances at scoring and a greater chance of winning the game. This information could be used to optimize the way teams play the game. 
+
+If a team optimizes on the total amount of yards, as seen in "Interesting Visualizations," it would be better to have a focus on passing plays. With a higher distribution of yards per attempt for passing, a team would have a better chance of gaining more yards, getting more chances, scoring more points, and winning the game.
+
+However, the error in this calculation is still high, meaning that it should not be the only factor when optimizing variables to when a game. As shown in the previous predictions with all variables, winning games is a combination of yards, turnovers, location, first downs, and time that all predict the winner of a game correctly about 80% of the time.
+
+
 
