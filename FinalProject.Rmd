@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-College Football has become the backbone of many college athletics programs. With greater revenue than the next 14 college sports _combined_, NCAA Football regually draws more fans and viewship than other major professional sports league.
+College Football has become the backbone of many college athletics programs. With greater revenue than the next 14 college sports _combined_, NCAA Football regularly draws more fans and viewership than other major professional sports leagues.
 
 Which game statistic is the best indicator of a win?
 
@@ -28,11 +28,18 @@ library(randomForest)
 
 For this project, we will be making use of the following libraries:
 
-- `tidyverse` will be used for tidying and manupulating data.frames
+- `tidyverse` will be used for tidying and manipulating data.frames
 - `cvTools` will help us create folds in our data for predictive modeling
 - `randomForest` will allow us to use Random Forest modeling on our data
 
 ## Data Management and Organization
+
+As our data was separated by year, we needed to combine our tables. However, due to the combination of the now-massive number of entities and attributes mapped for each entity, particularly within our Team-Game dataset, we needed to only select the attributes that we need for our work. To do this, we
+
+1. Create some functions that we'll use for data organization
+2. Import all of our datasets
+3. Combine all the separate datasets
+4. Mutate new attributes we need for our data
 
 ```{r tableFunctions}
 
@@ -250,7 +257,7 @@ passing <- rbind(passing2005, passing2006, passing2007, passing2008, passing2009
 
 #/---------------------------------------------------------------------------------------------------------------/#
 
-## These dataframes hold some meta-data about each team, including which confrence they're in and what their school name is. ##
+## These dataframes hold some meta-data about each team, including which conference they're in and what their school name is. ##
 
 teams2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/team.csv")
 teams2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/team.csv")
@@ -267,7 +274,7 @@ teams <- teams[match(unique(teams$`Team Code`), teams$`Team Code`),]
 
 #/---------------------------------------------------------------------------------------------------------------/#
 
-## These dataframes hold some data about confreneces, including confrence-type, and name. ##
+## These dataframes hold some data about conferences, including conference-type, and name. ##
 
 conference2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/conference.csv")
 conference2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/conference.csv")
@@ -292,29 +299,22 @@ seasonWins <- teamGameStats %>%
   summarize(Wins=n())
 
 ```
-As our data was seperated by year, we needed to combine our tables. However, due to the combination of the now massive number of entities and attributes mapped for each entity, particularly within our Team-Game dataset, we needed to only select the attributes that we need for our work. To do this, we
 
-1. Create some functions that we'll use for data organization
-2. Imported all of our indidivudal dataset
-3. Combine all the seperate datasets together
-4. Mutate new attributes we need for our data
+We had challenges through each of these steps. For starters, when we combined our dataframes, after importing, we found that dataframes are limited to a certain size within R. This meant that, particularly with `teamGameStats`, `rush`, and `pass`, we needed to select only the data we needed for our graphs. To do this, we directly selected the columns we needed for the year-by-year frames, and then rbound them together.
 
-We had challenges through each of these steps. For starters, when we combined our dataframes together, after importing, we found that dataframes are limited to a certain size within R. This meant that, particularly with `teamGameStats`, `rush`, and `pass`, we needed to select only the data we needed for our graphs. To do this, we directly selected the columns we needed for the year-by-year frames, and then rbound them together.
+To get our yards against, time of possession differential, turnover differential, and determine who won, we needed to access the data from the opposing team's game data. To this, we made a function that found the opposing team by Game and Team ID and returned it. Then, we created a for loop to go through each entity and append it as a new entity.
 
-To get the our yards against, time of possesion differential, turnover differential, and determine who won, we needed to access the data from the opposing team's game data. To this, we made a function that found the opposing team by Game and Team ID, and returned it. Then, we created a for loop to go through each entity and append it as a new entity.
+Finally, as conferences were realigned between 2010-2014 we needed to make sure that we had the correct final conference of each team. Beyond this, as this data set only included FBS games, and many FBS do one FCS game each season, we needed to make sure that each team's name and conference data was stored only once. For this, we rbound each table together and then removed any entities that were repeated.
 
-Finally, as conferences were realigned between 2010-2014 we needed to make sure that we had the correct final confrence of each team. Beyond this, as this data set only included FBS games, and many FBS do one FCS game each season, we needed to make sure that each team's name and conference data was stored only once. For this, we rbound each table together, and then removed any entities that were repeated.
 
 
 ## Interesting Visualizations {.tabset}
 
 To get familiar with our dataset, and to make some interesting observations about our data, we decided to do some exploratory data analysis.
 
-
 ### PPG vs Total Yards
 
-Rationally speaking, if you have more yards, that should correlate to more times that your team has marched down to the end-zone, or at least gotten close. In this graph, we can see that this theory generally holds true, following around a linear regression. This proves that there is correlation between Yards per Game and Points per Game.
-
+Rationally speaking, if you have more yards, that should correlate to more times that your team has marched down to the end-zone, or at least gotten close. In this graph, we can see that this theory generally holds, following a linear regression. This proves that there is a correlation between Yards per Game and Points per Game.
 
 ```{r yardsToPoints, message=FALSE}
 # See points scored per game per each number of total yardage
@@ -327,48 +327,9 @@ teamGameStats %>%
        title = "Points Scored per Yard by Game")
 ```
 
-
-## Rushing Yards per Attempt
-
-Next, we wanted to see how effective different progams were on run plays. To do this, we used a grouped together from 5 historically great college football teams... and Maryland, and compared their rushing yards per play with a violin plot. For this, we can notice that every school has a couple outlier, break-away plays on the run, which shouldn't really affect our view of each school's effectiveness on the run. However, if we look Ohio State's distribution, we can see they are sigificantly more effective in the 10-15 yard attempt range, showcasing their stronger running ability. This makes sense, especially with star running backs like Ezekiel Elliot, carlos Hyde, and Beanie Wells. However, 
-
-```{r rushingExploration}
-# See the distribution of rushing yards per attempt by several top football schools
-
-rushing %>%
-  filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
-  mutate(standardizedRushAttempt = ((Yards-meanRushAttempt)/sdRushAttempt)) %>%
-  inner_join(teams2013, by="Team Code") %>%
-  ggplot(aes(x=reorder(factor(Name), standardizedRushAttempt), y=Yards, color=Name)) +
-    geom_violin() +
-    labs(x="",
-         y="Rushing Yards",
-         title = "Distribution of Rushing Yards per Attempt by Top Football Schools") +
-    theme(legend.position = "none")
-
-```
-
-
-### Passing Yards per Attempt
-
-Much like the rushing yards per attempt, this graph shows the distribution of passing yards per attempt for the same top schools listed in the rushing attempts. While, much like the rushing graph, there are extreme outliers that shouldn't be a real factor, we can still find schools that stand out in their passing effeciency. In particular, we see that Oklahoma has a much higher 5-10 yard passing effeciency, and that LSU has a significantly less dense passing effeciency. Oklahoma's passing excellence makes a lot of sense, particularly in the air-raid style offenses that many Big 12 programs use. LSU, on the other hand, is surprising, considering their multiple SEC championships, 2 National Championship appearances, and 1 National Championship win in this span.
-
-```{r passingExploration}
-# See the distribution of passing yards per attempt by top football schools
-passing %>%
-  inner_join(teams, by="Team Code") %>%
-  filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
-  ggplot(aes(x=reorder(factor(Name), Yards), y=Yards, color=Name)) + 
-  labs(x="",
-       y="Passing Yards",
-       title = "Distribution of Passing Yards per Attempt by Top Football Schools") + 
-  geom_violin() + 
-  theme(legend.position="none")
-```
-
 ### Wins For Team by Conference
 
-For this graph, we wanted to the distribution of wins for each team per year, to see which teams are historically good, and the dsitributions of teams at certain numbers of wins. Looking at the distributions of wins, we see that most of our data lies in the 6-8 game territory, generaly following the form of a normal bell curve. After this, we wanted to see who the winningest teams across our dataset, and found Boise State on top. With Boise State's highest all-time winning percentage, and strong run during 2005-2013, it's highest wins placement makes a ton of sense. Likewise, Ohio State and Alabama are both in the top 5 highest winning percentages of all time, and both had dominant 21st century runs and National Championship Wins.
+For this graph, we wanted to the distribution of wins for each team per year, to see which teams are historically good, and the distributions of teams at certain numbers of wins. Looking at the distributions of wins, we see that most of our data lie in the 6-8 game territory, generally following the form of a normal bell curve. 
 
 ```{r winsExploration}
 # See total wins for each team, seperated by conference
@@ -383,7 +344,11 @@ seasonWins %>%
        title = "Average FBS Wins") +
   theme(axis.text.x=element_blank(),
         legend.title = element_blank())
+```
 
+After this, we wanted to see who the winningest teams across our dataset and found Boise State on top. With Boise State's highest all-time winning percentage, and strong run during 2005-2013, it's highest wins placement makes a ton of sense. Likewise, Ohio State and Alabama are both in the top 5 highest winning percentages of all time, and both had dominant 21st-century runs and National Championship Wins.
+
+```{r winsExplorationSupplement}
 seasonWins %>%
   inner_join(teams, by="Team Code") %>%
   inner_join(conference, by="Conference Code") %>%
@@ -394,13 +359,50 @@ seasonWins %>%
   select(Name, Wins)
 ```
 
-# What variable influences wins the most?
+
+### Rushing Yards per Attempt
+
+Next, we wanted to see how effective different programs were on run plays. To do this, we grouped 6 historically great college football teams and compared their rushing yards per play with a violin plot. For this, we can notice that every school has a couple of break-away plays on the run, which shouldn't affect our view of each school's effectiveness on the run. However, if we look at Ohio State's distribution, we can see they are significantly more effective in the 10-15 yard attempt range, showcasing their stronger running ability. This makes sense, especially with star running backs like Ezekiel Elliot, Carlos Hyde, and Beanie Wells.
+
+```{r rushingExploration}
+# See the distribution of rushing yards per attempt by several top football schools
+
+rushing %>%
+  filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
+  inner_join(teams2013, by="Team Code") %>%
+  ggplot(aes(x=reorder(factor(Name), Yards), y=Yards, color=Name)) +
+    geom_violin() +
+    labs(x="",
+         y="Rushing Yards",
+         title = "Distribution of Rushing Yards per Attempt by Top Football Schools") +
+    theme(legend.position = "none")
+
+```
+
+
+### Passing Yards per Attempt
+
+Much like the rushing yards per attempt, this graph shows the distribution of passing yards per attempt for the same top schools listed in the rushing attempts. While, much like the rushing graph, there are extreme outliers that shouldn't be a real factor, we can still find schools that stand out in their passing efficiency. In particular, we see that Oklahoma has a much higher 5-10 yard passing efficiency and that LSU has a significantly less dense passing efficiency. Oklahoma's passing excellence makes a lot of sense, particularly in the air-raid style offenses that many Big 12 programs use. LSU, on the other hand, is surprising, considering their multiple SEC championships, 2 National Championship appearances, and 1 National Championship win in this span.
+
+```{r passingExploration}
+# See the distribution of passing yards per attempt by top football schools
+passing %>%
+  inner_join(teams, by="Team Code") %>%
+  filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
+  ggplot(aes(x=reorder(factor(Name), Yards), y=Yards, color=Name)) + 
+  labs(x="",
+       y="Passing Yards",
+       title = "Distribution of Passing Yards per Attempt by Top Football Schools") + 
+  geom_violin() + 
+  theme(legend.position="none")
+```
 
 
 
-## Test variables {.tabset}
 
-In order to determine the viability of each variable as a predictor for wins, we will first visualize the relationship of each variable vs. wins and later use regression to see if it can be used to correctly identify games as wins or losses.
+## What variable influences win the most? {.tabset}
+
+To determine the viability of each variable as a predictor for wins, we will first visualize the relationship of each variable vs. wins and later use regression to see if it can be used to correctly identify games as wins or losses.
 
 ### Yards For
 
@@ -413,7 +415,7 @@ teamGameStats %>%
        title="Yards For Team Distribution by Game Result")
 ```
 
-As expected, yards plays a big role in a team's ability to win the game. Reaching the red zone or endzone more than your opponent in order to score more points means the winning team will most likely have more yards by the end of the game. This variable would be a good predictor in the winner of a game.
+As expected, yards plays a big role in a team's ability to win the game. Reaching the red zone or endzone more than your opponent to score more points means the winning team will most likely have more yards by the end of the game. This variable would be a good predictor of the winner of a game.
 
 ### Yards Against
 
@@ -426,7 +428,7 @@ teamGameStats %>%
        title="Yards Against Team Distribution by Game Result")
 ```
 
-Similarly to Yards For, yards against shows that a team needs to have its opponent end up with less yards by the end of the game, meaning that they will have less chances to score. This is also a valid predictor for wins.
+Similarly to Yards For, yards against shows that a team needs to have its opponent end up with fewer yards by the end of the game, meaning that they will have fewer chances to score. This is also a valid predictor for wins.
 
 
 ### Turnovers
@@ -440,11 +442,10 @@ teamGameStats %>%
        y="Turnover Differential",
        title="Turnover Differential Distribution by Game Result")
 ```
+
 In this case, turnovers include any time a team gives up possession of the ball, including fumbles, interceptions, punts, and turnover on downs.
 
-Turnovers have a good potential to be a predictor of wins. Teams that turn over the ball less compared to their opponent have more chances to score. However, there seems to be more spread in the distribution of turnover differential for games won, so it is possible that it will be harder to predict with.
-
-
+Turnovers have good potential to be a predictor of wins. Teams that turn over the ball less compared to their opponent have more chances to score. However, there seems to be more spread in the distribution of turnover differential for games won, so it may be harder to predict with.
 
 ### Home Field Advantage
 
@@ -462,7 +463,7 @@ teamGameStats %>%
        title="Home and Away vs Wins and Losses")
 ```
 
-This variable was one of the most interesting to analyze. According to popular belief, "Home Field Advantage" is when the home team supposedly has a higher chance to win the game. This could be due to more home team fans cheering them on, or not having to travel far for the game. Whatever differences this causes in the player's attitude towards the game is reflected in this plot. Teams that are home seem to win more often than not, and teams that are away seem to lose much more than they win.
+This variable was one of the most interesting to analyze. According to popular belief, "Home Field Advantage" is when the home team supposedly has a higher chance to win the game. This could be due to more home team fans cheering them on, or not having to travel far for the game. Whatever differences this causes in the player's attitude towards the game is reflected in this plot. Teams that are home seem to win more often than not, and teams that away seem to lose much more than they win.
 
 
 ### First Downs
@@ -475,10 +476,11 @@ teamGameStats %>%
        y="Total First Downs",
        title="Total First Down Distribution by Game Result")
 ```
-Amount of first downs in a game is another expected side effect of a winning team. The more first downs a team gets, the more chances they have at getting more yards and the more chances they have to score. It is clear that teams who get more first downs in a game are more likely to win, which could be a good predictor for our model.
+
+Amount of first downs in a game is another expected side effect of a winning team. The more first downs a team gets, the more chances they have at getting more yards, and the more chances they have to score. Teams who get more first downs in a game are more likely to win, which could be a good predictor for our model.
 
 
-### Time of Possesion Differential
+### Time of Possession
 
 ```{r timeOfPossession}
 teamGameStats %>%
@@ -488,6 +490,7 @@ teamGameStats %>%
        y="Time of Possession Differential",
        title="Time of Possession Differential Distribution by Game Result")
 ```
+
 Time of possession includes all of the time a team is on offense. In theory, this could be a predictor based on the fact that the team who has control of the game has the most control over who has possession. The graph mostly follows this assumption, with winning teams having a higher average time of possession.
 
 
@@ -499,14 +502,56 @@ teamGameStats %>%
   inner_join(conference, by="Conference Code") %>%
   ggplot(aes(x=win, y=Penalty)) + geom_violin()
 ```
-This plot shows that the distribution of penalties between the winning and losing teams tends to be very similar. Since there is no difference between number of penalties and winning or losing, this cannot be a valid predictor of whether or not a team will win.
 
+This plot shows that the distribution of penalties between the winning and losing teams tends to be very similar. Since there is no difference between the number of penalties and winning or losing, this cannot be a valid predictor of whether or not a team will win.
 
-## Random Forest Prediction Error For Each Variable {.tabset}
-
-For each of the previous variables, we will run a regression model using a random forest to determine whether the variable could be a valid predictor of a team winning a game based on the stats in that category at the end of the game. These predictions can then be used to conclude which is most important in determining the outcome of a game, which will later be used to determine the accuracy of our prediction model. 
 
 ## Choosing a Prediction Model
+
+Each of the prediction types, random forest, and logistic regression, will be tested on all of the valid variables. The smallest error from each of the predictions will determine which prediction model is better for determining the outcome of a game, and how well we can predict a game based on the given variables. 
+
+#### Random Forest
+
+```{r randomForestError, warning=FALSE}
+
+regressionData <- teamGameStats %>%
+  select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, win)
+folds <- cvFolds(n=nrow(regressionData), K = 10)
+error <- vector()
+for(i in 1:10) {
+  fold <- which(folds$which == i)
+  model <-  randomForest(win~., data=regressionData[-fold,])
+  prediction <- ifelse(predict(model, regressionData[fold,]) > 0.5, 1, 0)
+  error <- c(error, mean(regressionData[fold,]$win != prediction))
+}
+data.frame("Random Forest Error"=mean(error))
+```
+
+With an error rate of .192, Random Forest seems like a strong modeling option. However, this is very computationally intensive, taking 5-10 minutes on our PC to compute. 
+
+#### Logistic
+
+```{r logisticError}
+regressionData <- teamGameStats %>%
+  select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, win)
+folds <- cvFolds(n=nrow(regressionData), K=10)
+error <- vector()
+for(i in 1:10) {
+  fold <- which(folds$which == i)
+  model <- glm(win~., data = regressionData[-fold,], family = "binomial")
+  prediction <- ifelse(predict(model, regressionData[fold,]) > 0.5, 1, 0)
+  error <- c(error, mean(regressionData[fold,]$win != prediction))
+}
+data.frame("Logistic Error"=mean(error))
+```
+
+Surprisingly, our logistic model has even better error than our random forest model, with an error of ~.186! Beyond this, the runtime for this is significantly lower, point to this as the superior model. Based on this analysis, and some comparisons between individual predictors with both models not included in this code, we will be using logistic regression to predict our games from here on out.
+
+## Prediction Error For Each Variable {.tabset}
+
+For each of the previous variables, we will run a regression model using logistic regression to determine whether the variable could be a valid predictor of a team winning a game based on the stats in that category at the end of the game. These predictions can then be used to conclude which is most important in determining the outcome of a game, which will later be used to determine the accuracy of our prediction model. 
+
+### Yards For
 
 ```{r yardsForError, warning=FALSE}
 regressionData <- teamGameStats %>%
@@ -538,6 +583,7 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
+### Turnovers
 
 ```{r turnoverError, warning=FALSE}
 regressionData <- teamGameStats %>%
@@ -617,45 +663,7 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
-# Choosing a Prediction Model
-
-Each of the prediction types, random forest and logistic regression, will be tested on all of the valid variables. The smallest error from each of the predictions will determine which prediction model is better for determining the outcome of a game, and how well we can predict a game based on the given variables. 
-
-## Random Forest
-
-```{r compareMethodError, warning=FALSE}
-
-regressionData <- teamGameStats %>%
-  select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, win)
-folds <- cvFolds(n=nrow(regressionData), K = 10)
-error <- vector()
-for(i in 1:10) {
-  fold <- which(folds$which == i)
-  model <-  randomForest(win~., data=regressionData[-fold,])
-  prediction <- ifelse(predict(model, regressionData[fold,]) > 0.5, 1, 0)
-  error <- c(error, mean(regressionData[fold,]$win != prediction))
-}
-data.frame("Random Forest Error"=mean(error))
-```
-
-
-## Logistic
-
-```{r}
-regressionData <- teamGameStats %>%
-  select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, win)
-folds <- cvFolds(n=nrow(regressionData), K=10)
-error <- vector()
-for(i in 1:10) {
-  fold <- which(folds$which == i)
-  model <- glm(win~., data = regressionData[-fold,], family = "binomial")
-  prediction <- ifelse(predict(model, regressionData[fold,]) > 0.5, 1, 0)
-  error <- c(error, mean(regressionData[fold,]$win != prediction))
-}
-data.frame("Logistic Error"=mean(error))
-```
-
-Analyzing the error from each of the predictions, the logistic regression seems to be the better model.
+# Conclusion
 
 The value of the error shows that the model can predict the winner of games about 90% of the time. This is a significant value that shows that the most important factors in winning a football game are the total yards for each team, the difference in turnovers between teams, whether a team is home or away, and the length of time that a team spends on offense.
 
