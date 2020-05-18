@@ -379,24 +379,34 @@ seasonWins %>%
 
 ## Test variables {.tabset}
 
+In order to determine the viability of each variable as a predictor for wins, we will first visualize the relationship of each variable vs. wins and later use regression to see if it can be used to correctly identify games as wins or losses.
 
 ### Yards For
 
 ```{r yardsFor}
 teamGameStats %>%
   ggplot(aes(x=win, y=yardsFor)) + 
-  geom_violin()
+  geom_violin() +
+  labs(x="Win",
+       y="Yards For",
+       title="Yards For Team Distribution by Game Result")
 ```
 
+As expected, yards plays a big role in a team's ability to win the game. Reaching the red zone or endzone more than your opponent in order to score more points means the winning team will most likely have more yards by the end of the game. This variable would be a good predictor in the winner of a game.
 
 ### Yards Against
 
 ```{r yardsAgainst}
 teamGameStats %>%
   ggplot(aes(x=win, y=yardsAgainst)) + 
-  geom_violin()  +
-  labs()
+  geom_violin() +
+  labs(x="Win",
+       y="Yards Against",
+       title="Yards Against Team Distribution by Game Result")
 ```
+
+Similarly to Yards For, yards against shows that a team needs to have its opponent end up with less yards by the end of the game, meaning that they will have less chances to score. This is also a valid predictor for wins.
+
 
 ### Turnovers
 
@@ -409,6 +419,9 @@ teamGameStats %>%
        y="Turnover Differential",
        title="Turnover Differential Distribution by Game Result")
 ```
+In this case, turnovers include any time a team gives up possession of the ball, including fumbles, interceptions, punts, and turnover on downs.
+
+Turnovers have a good potential to be a predictor of wins. Teams that turn over the ball less compared to their opponent have more chances to score. However, there seems to be more spread in the distribution of turnover differential for games won, so it is possible that it will be harder to predict with.
 
 
 
@@ -420,7 +433,7 @@ teamGameStats %>%
   summarize(count=n()) %>%
   ggplot(aes(x=win, y=count, fill=home)) + 
   geom_bar(stat="identity", position=position_dodge()) + 
-  scale_x_discrete(label=c("Lose", "Win")) +
+  scale_x_discrete(label=c("Loss", "Win")) +
   scale_fill_discrete(labels=c("Away", "Home")) +
   theme(legend.title=element_blank()) +
   labs(x="",
@@ -428,6 +441,7 @@ teamGameStats %>%
        title="Home and Away vs Wins and Losses")
 ```
 
+This variable was one of the most interesting to analyze. According to popular belief, "Home Field Advantage" is when the home team supposedly has a higher chance to win the game. This could be due to more home team fans cheering them on, or not having to travel far for the game. Whatever differences this causes in the player's attitude towards the game is reflected in this plot. Teams that are home seem to win more often than not, and teams that are away seem to lose much more than they win.
 
 
 ### First Downs
@@ -440,7 +454,7 @@ teamGameStats %>%
        y="Total First Downs",
        title="Total First Down Distribution by Game Result")
 ```
-
+Amount of first downs in a game is another expected side effect of a winning team. The more first downs a team gets, the more chances they have at getting more yards and the more chances they have to score. It is clear that teams who get more first downs in a game are more likely to win, which could be a good predictor for our model.
 
 
 ### Time of Possesion Differential
@@ -453,7 +467,7 @@ teamGameStats %>%
        y="Time of Possession Differential",
        title="Time of Possession Differential Distribution by Game Result")
 ```
-
+Time of possession includes all of the time a team is on offense. In theory, this could be a predictor based on the fact that the team who has control of the game has the most control over who has possession. The graph mostly follows this assumption, with winning teams having a higher average time of possession.
 
 
 ### Penalties
@@ -464,8 +478,12 @@ teamGameStats %>%
   inner_join(conference, by="Conference Code") %>%
   ggplot(aes(x=win, y=Penalty)) + geom_violin()
 ```
+This plot shows that the distribution of penalties between the winning and losing teams tends to be very similar. Since there is no difference between number of penalties and winning or losing, this cannot be a valid predictor of whether or not a team will win.
 
-## Logistic Prediction Error For Each Variable {.tabset}
+
+## Random Forest Prediction Error For Each Variable {.tabset}
+
+For each of the previous variables, we will run a regression model using a random forest to determine whether the variable could be a valid predictor of a team winning a game based on the stats in that category at the end of the game. These predictions can then be used to conclude which is most important in determining the outcome of a game, which will later be used to determine the accuracy of our prediction model. 
 
 ### Yards For
 
@@ -476,7 +494,7 @@ folds <- cvFolds(n=nrow(regressionData), K = 10)
 error <- vector()
 for(i in 1:10) {
   fold <- which(folds$which == i)
-  model <-  randomForest(win~., data=regressionData[-fold,])
+  model <- glm(win~., data = regressionData[-fold,], family = "binomial")
   prediction <- ifelse(predict(model, regressionData[fold,]) > 0.5, 1, 0)
   error <- c(error, mean(regressionData[fold,]$win != prediction))
 }
@@ -492,7 +510,7 @@ folds <- cvFolds(n=nrow(regressionData), K = 10)
 error <- vector()
 for(i in 1:10) {
   fold <- which(folds$which == i)
-  model <-  randomForest(win~., data=regressionData[-fold,])
+  model <- glm(win~., data = regressionData[-fold,], family = "binomial")
   prediction <- ifelse(predict(model, regressionData[fold,]) > 0.5, 1, 0)
   error <- c(error, mean(regressionData[fold,]$win != prediction))
 }
@@ -508,7 +526,7 @@ folds <- cvFolds(n=nrow(regressionData), K = 10)
 error <- vector()
 for(i in 1:10) {
   fold <- which(folds$which == i)
-  model <-  randomForest(win~., data=regressionData[-fold,])
+  model <- glm(win~., data = regressionData[-fold,], family = "binomial")
   prediction <- ifelse(predict(model, regressionData[fold,]) > 0.5, 1, 0)
   error <- c(error, mean(regressionData[fold,]$win != prediction))
 }
@@ -524,7 +542,7 @@ folds <- cvFolds(n=nrow(regressionData), K = 10)
 error <- vector()
 for(i in 1:10) {
   fold <- which(folds$which == i)
-  model <-  randomForest(win~., data=regressionData[-fold,])
+  model <- glm(win~., data = regressionData[-fold,], family = "binomial")
   prediction <- ifelse(predict(model, regressionData[fold,]) > 0.5, 1, 0)
   error <- c(error, mean(regressionData[fold,]$win != prediction))
 }
@@ -540,7 +558,7 @@ folds <- cvFolds(n=nrow(regressionData), K = 10)
 error <- vector()
 for(i in 1:10) {
   fold <- which(folds$which == i)
-  model <-  randomForest(win~., data=regressionData[-fold,])
+  model <- glm(win~., data = regressionData[-fold,], family = "binomial")
   prediction <- ifelse(predict(model, regressionData[fold,]) > 0.5, 1, 0)
   error <- c(error, mean(regressionData[fold,]$win != prediction))
 }
@@ -557,7 +575,7 @@ folds <- cvFolds(n=nrow(regressionData), K = 10)
 error <- vector()
 for(i in 1:10) {
   fold <- which(folds$which == i)
-  model <-  randomForest(win~., data=regressionData[-fold,])
+  model <- glm(win~., data = regressionData[-fold,], family = "binomial")
   prediction <- ifelse(predict(model, regressionData[fold,]) > 0.5, 1, 0)
   error <- c(error, mean(regressionData[fold,]$win != prediction))
 }
@@ -574,7 +592,7 @@ folds <- cvFolds(n=nrow(regressionData), K = 10)
 error <- vector()
 for(i in 1:10) {
   fold <- which(folds$which == i)
-  model <-  randomForest(win~., data=regressionData[-fold,])
+  model <- glm(win~., data = regressionData[-fold,], family = "binomial")
   prediction <- ifelse(predict(model, regressionData[fold,]) > 0.5, 1, 0)
   error <- c(error, mean(regressionData[fold,]$win != prediction))
 }
@@ -583,12 +601,14 @@ data.frame(Error=mean(error))
 
 # Choosing a Prediction Model
 
+Each of the prediction types, random forest and logistic regression, will be tested on all of the valid variables. The smallest error from each of the predictions will determine which prediction model is better for determining the outcome of a game, and how well we can predict a game based on the given variables. 
+
 ## Random Forest
 
 ```{r randomForestAll, warning=FALSE}
 
 regressionData <- teamGameStats %>%
-  select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, Penalty, win)
+  select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, win)
 folds <- cvFolds(n=nrow(regressionData), K = 10)
 error <- vector()
 for(i in 1:10) {
@@ -598,17 +618,26 @@ for(i in 1:10) {
   error <- c(error, mean(regressionData[fold,]$win != prediction))
 }
 data.frame("Random Forest Error"=mean(error))
+```
 
+
+## Logistic
+
+```{r}
 regressionData <- teamGameStats %>%
-  select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, Penalty, win)
+  select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, win)
 folds <- cvFolds(n=nrow(regressionData), K = 10)
 error <- vector()
 for(i in 1:10) {
   fold <- which(folds$which == i)
-  model <-   glm(win~., data = regressionData[-fold,], family = "binomial")
+  model <- glm(win~., data = regressionData[-fold,], family = "binomial")
   prediction <- ifelse(predict(model, regressionData[fold,]) > 0.5, 1, 0)
   error <- c(error, mean(regressionData[fold,]$win != prediction))
 }
 data.frame("Logistic Error"=mean(error))
 ```
+
+Analyzing the error from each of the predictions, the logistic regression seems to be the better model.
+
+The value of the error shows that the model can predict the winner of games about 90% of the time. This is a significant value that shows that the most important factors in winning a football game are the total yards for each team, the difference in turnovers between teams, whether a team is home or away, and the length of time that a team spends on offense.
 
