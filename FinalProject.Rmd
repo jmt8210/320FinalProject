@@ -14,9 +14,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-College Football has become the backbone of many college athletics programs. With greater revenue than the next 14 college sports _combined_, NCAA Football regularly draws more fans and viewership than other major professional sports leagues.
+Football is the driving force of college athletics. Beyond the national attention and massive fanbases, college football brings in more revenue than the next 14 sports combined, and almost all schools rely on finance their less profitable sports. With this incredible pressure for success, athletic directors and coaches will do almost anything to get a slight advantage against their opponents.
 
-Which game statistic is the best indicator of a win?
+Within the past 10-20 years, data science and analytics have become a cornerstone of athletic success. With general managers running analysis over the almost infinite supply of athletic data, teams are making almost every decision with data in mind. With the importance of college football to our campus, and the importance of data analytics to it, our group wanted the greatest indicator of success from within data. Which post-game statistic most often predicted a win? What does this mean for program success? How can a football coach make changes to lead to a greater season? With this project, we aim to answer all of these.
+
 
 ## Project Setup
 
@@ -46,7 +47,7 @@ As our data was separated by year, we needed to combine our tables. However, due
 #/---------------------------------------------------------------------------------------------------------------/#
 
 
-## Functions in this section deal with selecting only data we need from large dataframes 
+## Functions in this section deal with selecting only data we need from large data frames 
 
 
 rushPassSelect <- function(df){
@@ -54,7 +55,7 @@ rushPassSelect <- function(df){
     select(`Team Code`, Yards)
 }
 
-# This function will only select the data we need for our analysis and to create more attributes from the teamGameStats dataframe 
+# This function will only select the data we need for our analysis and to create more attributes from the teamGameStats data frame 
 teamGameStatsSelect <- function (df){
   df %>%
     select(`Game Code`, `Team Code`, `Points`, `Rush Yard`, `Pass Yard`, `Kickoff Ret Yard`, `Punt Ret Yard`, `Misc Ret Yard`, `Int Ret Yard`, `Fum Ret Yard`, `Pass Int`, `Fumble Lost`, `Punt`, `Penalty`, `1st Down Rush`, `1st Down Pass`, `1st Down Penalty`, `Time Of Possession`) 
@@ -63,7 +64,7 @@ teamGameStatsSelect <- function (df){
 
 #/---------------------------------------------------------------------------------------------------------------/#
 
-## Functions in this section deal with adding attributes to the teamGameStats dataframe that require ##
+## Functions in this section deal with adding attributes to the teamGameStats data frame that require ##
 
 # This function will add the 'yardsAgainst' attribute to the given dataframe
 mutateYardsAgainst <- function(df){
@@ -87,7 +88,7 @@ mutateYardsAgainst <- function(df){
 }
 
 
-# This function will add the 'opponentPoints' attrubute to the given dataframe
+# This function will add the 'opponentPoints' attribute to the given data frame
 mutatePointsAgainst <- function(df){
 
   findPoints <- function(gameCode, teamCode){
@@ -178,13 +179,13 @@ games2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/game.
 games2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game.csv")
 
 
-# rbinding the dataframes into one, long dataframe
+# rbinding the data frames into one, long data frame
 games <- rbind(games2005, games2006, games2007, games2008, games2009, games2010, games2011, games2012, games2013)
 
 
 #/---------------------------------------------------------------------------------------------------------------/#
 
-## These dataframes hold data about how each team did in every game. It's most of the data we use in this project. ##
+## These data frames hold data about how each team did in every game. It's most of the data we use in this project. ##
 
 # Importing every year's data frame, making sure to filter out the data we don't need
 teamGameStats2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/team-game-statistics.csv") %>% teamGameStatsSelect()
@@ -197,7 +198,7 @@ teamGameStats2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5
 teamGameStats2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/team-game-statistics.csv") %>% teamGameStatsSelect()
 teamGameStats2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team-game-statistics.csv") %>% teamGameStatsSelect()
 
-# rbinding the the frames together to get one, longer data frame
+# rbinding the frames together to get one, longer data frame
 teamGameStats <- rbind(teamGameStats2013, teamGameStats2012, teamGameStats2011, teamGameStats2010, teamGameStats2009, teamGameStats2008, teamGameStats2007, teamGameStats2006, teamGameStats2005)
 
 
@@ -223,7 +224,7 @@ teamGameStats <- teamGameStats %>%
 
 #/---------------------------------------------------------------------------------------------------------------/#
 
-## This dataframes hold per-carry rushing data, including yards per attempt, and which school it was done for ##
+## This data frames hold per-carry rushing data, including yards per attempt, and which school it was done for ##
 
 rushing2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/rush.csv") %>% rushPassSelect()
 rushing2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/rush.csv") %>% rushPassSelect()
@@ -240,7 +241,7 @@ rushing <- rbind(rushing2005, rushing2006, rushing2007, rushing2008, rushing2009
 
 #/---------------------------------------------------------------------------------------------------------------/#
 
-## These dataframes hold per-pass passing data, including yards for each attempt, and the school it was done for ##
+## These data frames hold per-pass passing data, including yards for each attempt, and the school it was done for ##
 
 passing2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/pass.csv") %>% rushPassSelect()
 passing2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/pass.csv") %>% rushPassSelect()
@@ -257,7 +258,7 @@ passing <- rbind(passing2005, passing2006, passing2007, passing2008, passing2009
 
 #/---------------------------------------------------------------------------------------------------------------/#
 
-## These dataframes hold some meta-data about each team, including which conference they're in and what their school name is. ##
+## These data frames hold some meta-data about each team, including which conference they're in and what their school name is. ##
 
 teams2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/team.csv")
 teams2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/team.csv")
@@ -274,7 +275,7 @@ teams <- teams[match(unique(teams$`Team Code`), teams$`Team Code`),]
 
 #/---------------------------------------------------------------------------------------------------------------/#
 
-## These dataframes hold some data about conferences, including conference-type, and name. ##
+## These data frames hold some data about conferences, including conference-type, and name. ##
 
 conference2005 <- read_csv("college-football-statistics/cfbstats-com-2005-1-5-0/conference.csv")
 conference2006 <- read_csv("college-football-statistics/cfbstats-com-2006-1-5-0/conference.csv")
@@ -291,7 +292,7 @@ conference <- conference[match(unique(conference$`Conference Code`),conference$`
 
 #/---------------------------------------------------------------------------------------------------------------/#
 
-## This code creates a new dataframe, containing the sum of total wins by each school ##
+## This code creates a new data frame, containing the sum of total wins by each school ##
 
 seasonWins <- teamGameStats %>%
   filter(win == TRUE) %>%
@@ -300,7 +301,7 @@ seasonWins <- teamGameStats %>%
 
 ```
 
-We had challenges through each of these steps. For starters, when we combined our dataframes, after importing, we found that dataframes are limited to a certain size within R. This meant that, particularly with `teamGameStats`, `rush`, and `pass`, we needed to select only the data we needed for our graphs. To do this, we directly selected the columns we needed for the year-by-year frames, and then rbound them together.
+We had challenges through each of these steps. For starters, when we combined our data frames, after importing, we found that data frames are limited to a certain size within R. This meant that, particularly with `teamGameStats`, `rush`, and `pass`, we needed to select only the data we needed for our graphs. To do this, we directly selected the columns we needed for the year-by-year frames, and then rbound them together.
 
 To get our yards against, time of possession differential, turnover differential, and determine who won, we needed to access the data from the opposing team's game data. To this, we made a function that found the opposing team by Game and Team ID and returned it. Then, we created a for loop to go through each entity and append it as a new entity.
 
@@ -346,7 +347,7 @@ seasonWins %>%
         legend.title = element_blank())
 ```
 
-After this, we wanted to see who the winningest teams across our dataset and found Boise State on top. With Boise State's highest all-time winning percentage, and strong run during 2005-2013, it's highest wins placement makes a ton of sense. Likewise, Ohio State and Alabama are both in the top 5 highest winning percentages of all time, and both had dominant 21st-century runs and National Championship Wins.
+After this, we wanted to see who the winningest teams across our dataset and found Boise State on top. With Boise State's highest all-time winning percentage, and strong run during 2005-2013, its highest wins placement makes a ton of sense. Likewise, Ohio State and Alabama are both in the top 5 highest winning percentages of all time, and both had dominant 21st-century runs and National Championship Wins.
 
 ```{r winsExplorationSupplement}
 seasonWins %>%
@@ -415,7 +416,7 @@ teamGameStats %>%
        title="Yards For Team Distribution by Game Result")
 ```
 
-As expected, yards plays a big role in a team's ability to win the game. Reaching the red zone or endzone more than your opponent to score more points means the winning team will most likely have more yards by the end of the game. This variable would be a good predictor of the winner of a game.
+As expected, yards play a big role in a team's ability to win the game. Reaching the red zone or endzone more than your opponent to score more points means the winning team will most likely have more yards by the end of the game. This variable would be a good predictor of the winner of a game.
 
 ### Yards Against
 
@@ -428,7 +429,7 @@ teamGameStats %>%
        title="Yards Against Team Distribution by Game Result")
 ```
 
-Similarly to Yards For, yards against shows that a team needs to have its opponent end up with fewer yards by the end of the game, meaning that they will have fewer chances to score. This is also a valid predictor for wins.
+Similarly, to Yards For, yards against shows that a team needs to have its opponent end up with fewer yards by the end of the game, meaning that they will have fewer chances to score. This is also a valid predictor for wins.
 
 
 ### Turnovers
@@ -463,7 +464,7 @@ teamGameStats %>%
        title="Home and Away vs Wins and Losses")
 ```
 
-This variable was one of the most interesting to analyze. According to popular belief, "Home Field Advantage" is when the home team supposedly has a higher chance to win the game. This could be due to more home team fans cheering them on, or not having to travel far for the game. Whatever differences this causes in the player's attitude towards the game is reflected in this plot. Teams that are home seem to win more often than not, and teams that away seem to lose much more than they win.
+This variable was one of the most interesting to analyze. According to popular belief, "Home Field Advantage" is when the home team supposedly has a higher chance to win the game. This could be due to more home team fans cheering them on, or not having to travel far for the game. Whatever differences this causes in the player's attitude towards the game is reflected in this plot. Teams that are home seemed to win more often than not, and teams that away seem to lose much more than they win.
 
 
 ### First Downs
@@ -491,7 +492,7 @@ teamGameStats %>%
        title="Time of Possession Differential Distribution by Game Result")
 ```
 
-Time of possession includes all of the time a team is on offense. In theory, this could be a predictor based on the fact that the team who has control of the game has the most control over who has possession. The graph mostly follows this assumption, with winning teams having a higher average time of possession.
+Time of possession includes all the time a team is on offense. In theory, this could be a predictor since the team who has control of the game has the most control over who has possession. The graph mostly follows this assumption, with winning teams having a higher average time of possession.
 
 
 ### Penalties
@@ -503,18 +504,17 @@ teamGameStats %>%
   ggplot(aes(x=win, y=Penalty)) + geom_violin()
 ```
 
-This plot shows that the distribution of penalties between the winning and losing teams tends to be very similar. Since there is no difference between the number of penalties and winning or losing, this cannot be a valid predictor of whether or not a team will win.
+This plot shows that the distribution of penalties between the winning and losing teams tends to be very similar. Since there is no difference between the number of penalties and winning or losing, this cannot be a valid predictor of whether a team will win.
 
 
 ## Choosing a Prediction Model
 
-Each of the prediction types, random forest, and logistic regression, will be tested on all of the valid variables. The smallest error from each of the predictions will determine which prediction model is better for determining the outcome of a game, and how well we can predict a game based on the given variables. 
+Each of the prediction types, random forest, and logistic regression, will be tested on all the valid variables. The smallest error from each of the predictions will determine which prediction model is better for determining the outcome of a game, and how well we can predict a game based on the given variables. 
 
 #### Random Forest
 
 ```{r randomForestError, warning=FALSE}
-#Seed list: 6, 8
-set.seed(6)
+set.seed(8)
 regressionData <- teamGameStats %>%
   select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, win)
 folds <- cvFolds(n=nrow(regressionData), K = 10)
@@ -528,7 +528,7 @@ for(i in 1:10) {
 data.frame("Random Forest Error"=mean(error))
 ```
 
-With an error rate of .192, Random Forest seems like a strong modeling option. However, this is very computationally intensive, taking 5-10 minutes on our PC to compute. 
+With an error rate of .1914, Random Forest seems like a strong modeling option. However, this is very computationally intensive, taking 5-10 minutes on our PC to compute. 
 
 #### Logistic
 
@@ -546,7 +546,7 @@ for(i in 1:10) {
 data.frame("Logistic Error"=mean(error))
 ```
 
-Surprisingly, our logistic model has even better error than our random forest model, with an error of about .190. Beyond this, the runtime for this is significantly lower, point to this as the superior model. Based on this analysis, and some comparisons between individual predictors with both models not included in this code, we will be using logistic regression to predict our games from here on out.
+Surprisingly, our logistic model has even better error than our random forest model, with an error of about .1907. This error, which not enough to to be statistically sigificant, is slightly better that our random forest error rate. Due to the much higher computational cost, and the conseqentual time penalty caused by our random forest modeling, we will be using logisitc regression to analyze our error rates from here on out.
 
 ## Prediction Error For Each Variable {.tabset}
 
@@ -568,7 +568,7 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
-The amount of yards a team gained over the course of the game was able to predict the winner of the game 62.5% of the time. This means that yards for is a good predictor for wins. 
+The number of yards a team gained over the course of the game was able to predict the winner of the game 62.5% of the time. This means that yards for is a good predictor for wins. 
 
 
 ### Yards Against
@@ -587,7 +587,7 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
-The amount of yards an opponent gained over the course of the game was able to predict the winner of the game about 64.1% of the time. This means that yards against is a good predictor for wins.
+The number of yards an opponent gained over the course of the game was able to predict the winner of the game about 64.1% of the time. This means that yards against is a good predictor for wins.
 
 ### Turnovers
 
@@ -641,7 +641,7 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
-Amount of first downs achieved by a team predicted the outcome of a game correctly 61.4% of the time, meaning it is a good predictor of wins.
+The number of first downs achieved by a team predicted the outcome of a game correctly 61.4% of the time, meaning it is a good predictor of wins.
 
 ### Time of Possession
 
@@ -677,7 +677,7 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
-Number of total penalties by a team was only able to predict the winner 50% of the time. As shown from the graphs, penalties vs. winning and losing were almost identical. This means that penalties is not a good predictor of wins.
+The number of total penalties by a team was only able to predict the winner 50% of the time. As shown from the graphs, penalties vs. winning and losing were almost identical. This means that penalties is not a good predictor of wins.
 
 # Conclusion
 
@@ -685,7 +685,7 @@ Based on these predictions, it seems that yards against and turnovers are the bi
 
 If a team optimizes on their defense, according to the model, it will give them a better chance of winning games. Since turnovers is a good predictor of winning a game, focusing on ways to stop teams from converting on 4th down, or finding other ways to force fumbles and interceptions would be some of the most important changes a team could make towards winning more games in the future.
 
-However, the error in this calculation means that it is not perfect.It should not be the only factor when optimizing variables to when a game. As shown in the previous predictions with all variables, winning games is a combination of yards, turnovers, location and first downs. All of these predict the winner of a game correctly about 80% of the time. This slight increase means that turnovers are not the only optimization needed, however they seem to be the most important factor. Theoretically, if a team were to use this model by focusing on defense to force turnovers and stop the other team from gaining yards, while also keeping in mind the other variables, they would be much more likely to win games.
+However, the error in this calculation means that it is not perfect. It should not be the only factor when optimizing variables to when a game. As shown in the previous predictions with all variables, winning games is a combination of yards, turnovers, location and first downs. All of these predict the winner of a game correctly about 80% of the time. This slight increase means that turnovers are not the only optimization needed, however they seem to be the most important factor. Theoretically, if a team were to use this model by focusing on defense to force turnovers and stop the other team from gaining yards, while also keeping in mind the other variables, they would be much more likely to win games.
 
 
 
