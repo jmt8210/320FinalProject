@@ -905,7 +905,7 @@ for(i in 1:10) {
 data.frame(&quot;Random Forest Error&quot;=mean(error))</code></pre>
 <pre><code>##   Random.Forest.Error
 ## 1           0.1893352</code></pre>
-<p>With an error rate of .1914, Random Forest seems like a strong modeling option. However, this is very computationally intensive, taking 5-10 minutes on our PC to compute.</p>
+<p>With an error rate of around .19, Random Forest seems like a strong modeling option. However, this is very computationally intensive, taking 5-10 minutes on our PC to compute.</p>
 </div>
 <div id="logistic" class="section level4">
 <h4>Logistic</h4>
@@ -922,7 +922,7 @@ for(i in 1:10) {
 data.frame(&quot;Logistic Error&quot;=mean(error))</code></pre>
 <pre><code>##   Logistic.Error
 ## 1      0.1907202</code></pre>
-<p>Surprisingly, our logistic model has even better error than our random forest model, with an error of about .1907. This error, which not enough to to be statistically sigificant, is slightly better that our random forest error rate. Due to the much higher computational cost, and the conseqentual time penalty caused by our random forest modeling, we will be using logisitc regression to analyze our error rates from here on out.</p>
+<p>Surprisingly, our logistic model has even better error than our random forest model, with an error of about .19. The difference between these two errors is not enough to be statistically sigificant, and was found to change by .03 within different trials of this data. Due to the much higher computational cost of random forest modeling, and the conseqential time penalty caused by it, we will be using logisitc regression to analyze our error rates from here on out.</p>
 </div>
 </div>
 <div id="prediction-error-for-each-variable" class="section level2 tabset">
