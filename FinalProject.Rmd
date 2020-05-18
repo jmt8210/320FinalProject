@@ -12,27 +12,25 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Introduction
 
+College Football has become the backbone of many college athletics programs. 
 
 ## Project Setup
 
 ```{r libraries, message=FALSE}
 library(tidyverse)
-library(kableExtra)
 library(cvTools)
 library(randomForest)
 ```
 
 For this project, we will be making use of the following libraries:
 
-- _tidyverse_ will be used for tidying and manupulating data.frames
-- _kableExtra_ will allow us print out useful tables
-- _cvTools_ will help us create folds in our data for predictive modeling
-- _random forest_ will allow us to use Random Forest modeling on our data
+- `tidyverse` will be used for tidying and manupulating data.frames
+- `cvTools` will help us create folds in our data for predictive modeling
+- `randomForest` will allow us to use Random Forest modeling on our data
 
 ## Data Management and Organization
-
-As our data was seperated by year, we needed to combine our tables. However, due to the combination of the now massive number of entities and attributes mapped for each entity, particularly within our Team-Game dataset, we needed to only select the attributes that we need for our work. To do this, we
 
 ```{r tableFunctions}
 
@@ -152,6 +150,7 @@ mutateTOPDiff <- function(df){
 #/---------------------------------------------------------------------------------------------------------------/#
 
 ```
+
 ```{r tables, message=FALSE}
 
 #/---------------------------------------------------------------------------------------------------------------/#
@@ -171,7 +170,7 @@ games2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/game
 
 
 # rbinding the dataframes into one, long dataframe
-games <- games2013#rbind(games2005, games2006, games2007, games2008, games2009, games2010, games2011, games2012, games2013)
+games <- rbind(games2005, games2006, games2007, games2008, games2009, games2010, games2011, games2012, games2013)
 
 
 #/---------------------------------------------------------------------------------------------------------------/#
@@ -190,11 +189,11 @@ teamGameStats2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5
 teamGameStats2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team-game-statistics.csv") %>% teamGameStatsSelect()
 
 # rbinding the the frames together to get one, longer data frame
-#teamGameStats <- rbind(teamGameStats2013, teamGameStats2012, teamGameStats2011, teamGameStats2010, teamGameStats2009, teamGameStats2008, teamGameStats2007, teamGameStats2006, teamGameStats2005)
+teamGameStats <- rbind(teamGameStats2013, teamGameStats2012, teamGameStats2011, teamGameStats2010, teamGameStats2009, teamGameStats2008, teamGameStats2007, teamGameStats2006, teamGameStats2005)
 
 
 # Creating new attributes for teamGameStats using the data we already have
-teamGameStats <- teamGameStats2013 %>%
+teamGameStats <- teamGameStats %>%
   
   # 'yardsFor' will give us the sum of all yards during a game for the team
   mutate(yardsFor=`Rush Yard`+`Pass Yard`+`Kickoff Ret Yard`+`Punt Ret Yard`+`Misc Ret Yard`+`Int Ret Yard`+`Fum Ret Yard`) %>%
@@ -227,7 +226,7 @@ rushing2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/rus
 rushing2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/rush.csv") %>% rushPassSelect()
 rushing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/rush.csv") %>% rushPassSelect()
 
-rushing <- rushing2013#rbind(rushing2005, rushing2006, rushing2007, rushing2008, rushing2009, rushing2010, rushing2011, rushing2012, rushing2013)
+rushing <- rbind(rushing2005, rushing2006, rushing2007, rushing2008, rushing2009, rushing2010, rushing2011, rushing2012, rushing2013)
 
 
 #/---------------------------------------------------------------------------------------------------------------/#
@@ -244,7 +243,7 @@ passing2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/pas
 passing2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/pass.csv") %>% rushPassSelect()
 passing2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/pass.csv") %>% rushPassSelect()
 
-passing <- passing2013#rbind(passing2005, passing2006, passing2007, passing2008, passing2009, passing2010, passing2011, passing2012, passing2013)
+passing <- rbind(passing2005, passing2006, passing2007, passing2008, passing2009, passing2010, passing2011, passing2012, passing2013)
 
 
 #/---------------------------------------------------------------------------------------------------------------/#
@@ -261,8 +260,8 @@ teams2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/team.
 teams2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/team.csv")
 teams2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/team.csv")
 
-teams <- teams2013#rbind(teams2005, teams2006, teams2007, teams2008, teams2009, teams2010, teams2011, teams2012, teams2013)
-
+teams <- rbind(teams2005, teams2006, teams2007, teams2008, teams2009, teams2010, teams2011, teams2012, teams2013)
+teams <- teams[match(unique(teams$`Team Code`), teams$`Team Code`),]
 
 #/---------------------------------------------------------------------------------------------------------------/#
 
@@ -278,8 +277,8 @@ conference2011 <- read_csv("college-football-statistics/cfbstats-com-2011-1-5-0/
 conference2012 <- read_csv("college-football-statistics/cfbstats-com-2012-1-5-4/conference.csv")
 conference2013 <- read_csv("college-football-statistics/cfbstats-com-2013-1-5-20/conference.csv")
 
-conference <- congerence2013#rbind(conference2013, conference2012, conference2011, conference2010, conference2009, conference2008, conference2007, conference2006, conference2005)
-#conference <- conference[match(unique(conference$`Conference Code`),conference$`Conference Code`),]
+conference <- rbind(conference2013, conference2012, conference2011, conference2010, conference2009, conference2008, conference2007, conference2006, conference2005)
+conference <- conference[match(unique(conference$`Conference Code`),conference$`Conference Code`),]
 
 #/---------------------------------------------------------------------------------------------------------------/#
 
@@ -291,26 +290,31 @@ seasonWins <- teamGameStats %>%
   summarize(Wins=n())
 
 ```
+As our data was seperated by year, we needed to combine our tables. However, due to the combination of the now massive number of entities and attributes mapped for each entity, particularly within our Team-Game dataset, we needed to only select the attributes that we need for our work. To do this, we
 
 1. Create some functions that we'll use for data organization
-2. Imported all of our indidivudal datasets
-2. Selected only the attributes that we needed our calculuations
-3. Used rbind() to concatenate all the datasets together
-4. Mutated new attributes for entities that combined/relied in on data from other entities
-5. Selected the data that we still needed and removed the attributes we needed for our new, mutated ones
+2. Imported all of our indidivudal dataset
+3. Combine all the seperate datasets together
+4. Mutate new attributes we need for our data
+
+We had challenges through each of these steps. For starters, when we combined our dataframes together, after importing, we found that dataframes are limited to a certain size within R. This meant that, particularly with `teamGameStats`, `rush`, and `pass`, we needed to select only the data we needed for our graphs. To do this, we directly selected the columns we needed for the year-by-year frames, and then rbound them together.
+
+To get the our yards against, time of possesion differential, turnover differential, and determine who won, we needed to access the data from the opposing team's game data. To this, we made a function that found the opposing team by Game and Team ID, and returned it. Then, we created a for loop to go through each entity and append it as a new entity.
+
+Finally, as conferences were realigned between 2010-2014 we needed to make sure that we had the correct final confrence of each team. Beyond this, as this data set only included FBS games, and many FBS do one FCS game each season, we needed to make sure that each team's name and conference data was stored only once. For this, we rbound each table together, and then removed any entities that were repeated.
 
 
-## Interesting Visualizations
+## Interesting Visualizations {.tabset}
 
 To get familiar with our dataset, and to make some interesting observations about our data, we decided to do some exploratory data analysis.
 
-{.tabset}
+
 ### PPG vs Total Yards
 
 Rationally speaking, if you have more yards, that should correlate to more times that your team has marched down to the end-zone, or at least gotten close. In this graph, we can see that this theory generally holds true, following around a linear regression. This proves that there is correlation between Yards per Game and Points per Game.
 
 
-```{r yardsToPoints}
+```{r yardsToPoints, message=FALSE}
 # See points scored per game per each number of total yardage
 teamGameStats %>%
   ggplot((aes(x=yardsFor, y=Points))) +
@@ -324,25 +328,28 @@ teamGameStats %>%
 
 ## Rushing Yards per Attempt
 
-Next, we wanted to see how effective different progams were on run plays. To do this, we used a grouped together from 5 historically great college football teams... and Maryland, and compared their rushing yards per play with a violin plot. *_*
+Next, we wanted to see how effective different progams were on run plays. To do this, we used a grouped together from 5 historically great college football teams... and Maryland, and compared their rushing yards per play with a violin plot. For this, we can notice that every school has a couple outlier, break-away plays on the run, which shouldn't really affect our view of each school's effectiveness on the run. However, if we look Ohio State's distribution, we can see they are sigificantly more effective in the 10-15 yard attempt range, showcasing their stronger running ability. This makes sense, especially with star running backs like Ezekiel Elliot, carlos Hyde, and Beanie Wells. However, 
 
 ```{r rushingExploration}
 # See the distribution of rushing yards per attempt by several top football schools
+
 rushing %>%
   filter(`Team Code` == 392 | `Team Code` == 8 | `Team Code` == 518 | `Team Code` == 147 | `Team Code` == 365 | `Team Code` == 522) %>%
+  mutate(standardizedRushAttempt = ((Yards-meanRushAttempt)/sdRushAttempt)) %>%
   inner_join(teams2013, by="Team Code") %>%
-  ggplot(aes(x=reorder(factor(Name), Yards), y=Yards, color=Name)) +
+  ggplot(aes(x=reorder(factor(Name), standardizedRushAttempt), y=Yards, color=Name)) +
     geom_violin() +
     labs(x="",
          y="Rushing Yards",
          title = "Distribution of Rushing Yards per Attempt by Top Football Schools") +
     theme(legend.position = "none")
+
 ```
 
 
 ### Passing Yards per Attempt
 
-Much like the rushing yards per attempt, this graph shows the distribution of passing yards per attempt for the same top schools listed in the rushing attempts.
+Much like the rushing yards per attempt, this graph shows the distribution of passing yards per attempt for the same top schools listed in the rushing attempts. While, much like the rushing graph, there are extreme outliers that shouldn't be a real factor, we can still find schools that stand out in their passing effeciency. In particular, we see that Oklahoma has a much higher 5-10 yard passing effeciency, and that LSU has a significantly less dense passing effeciency. Oklahoma's passing excellence makes a lot of sense, particularly in the air-raid style offenses that many Big 12 programs use. LSU, on the other hand, is surprising, considering their multiple SEC championships, 2 National Championship appearances, and 1 National Championship win in this span.
 
 ```{r passingExploration}
 # See the distribution of passing yards per attempt by top football schools
@@ -359,7 +366,7 @@ passing %>%
 
 ### Wins For Team by Conference
 
-For this graph, we wanted to the distribution of wins for each team per year, to see which teams are historically good, and the dsitributions of teams at certain numbers of wins.
+For this graph, we wanted to the distribution of wins for each team per year, to see which teams are historically good, and the dsitributions of teams at certain numbers of wins. Looking at the distributions of wins, we see that most of our data lies in the 6-8 game territory, generaly following the form of a normal bell curve. After this, we wanted to see who the winningest teams across our dataset, and found Boise State on top. With Boise State's highest all-time winning percentage, and strong run during 2005-2013, it's highest wins placement makes a ton of sense. Likewise, Ohio State and Alabama are both in the top 5 highest winning percentages of all time, and both had dominant 21st century runs and National Championship Wins.
 
 ```{r winsExploration}
 # See total wins for each team, seperated by conference
@@ -369,8 +376,20 @@ seasonWins %>%
   filter(Subdivision=="FBS") %>%
   ggplot(aes(x=reorder(factor(Name.x), Wins), y=(Wins/8), color=Name.y)) +
   geom_point() +
-  labs(x="Team") +
-  theme(axis.text.x=element_blank())
+  labs(x="Team",
+       y="Average Wins",
+       title = "Average FBS Wins") +
+  theme(axis.text.x=element_blank(),
+        legend.title = element_blank())
+
+seasonWins %>%
+  inner_join(teams, by="Team Code") %>%
+  inner_join(conference, by="Conference Code") %>%
+  filter(Subdivision=="FBS") %>%
+  arrange(desc(Wins)) %>%
+  slice(1:5) %>%
+  inner_join(teams, by="Team Code") %>%
+  select(Name, Wins)
 ```
 
 # What variable influences wins the most?
@@ -485,9 +504,9 @@ This plot shows that the distribution of penalties between the winning and losin
 
 For each of the previous variables, we will run a regression model using a random forest to determine whether the variable could be a valid predictor of a team winning a game based on the stats in that category at the end of the game. These predictions can then be used to conclude which is most important in determining the outcome of a game, which will later be used to determine the accuracy of our prediction model. 
 
-### Yards For
+## Choosing a Prediction Model
 
-```{r logisticRegressionYardsFor, warning=FALSE}
+```{r yardsForError, warning=FALSE}
 regressionData <- teamGameStats %>%
   select(yardsFor, win)
 folds <- cvFolds(n=nrow(regressionData), K = 10)
@@ -503,7 +522,7 @@ data.frame(Error=mean(error))
 
 ### Yards Against
 
-```{r logisticRegressionYardsAgainst, warning=FALSE}
+```{r yardsAgainstError, warning=FALSE}
 regressionData <- teamGameStats %>%
   select(yardsAgainst, win)
 folds <- cvFolds(n=nrow(regressionData), K = 10)
@@ -517,9 +536,8 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
-### Turnovers
 
-```{r logisticRegressionTurnovers, warning=FALSE}
+```{r turnoverError, warning=FALSE}
 regressionData <- teamGameStats %>%
   select(turnoverDiff, win)
 folds <- cvFolds(n=nrow(regressionData), K = 10)
@@ -535,7 +553,7 @@ data.frame(Error=mean(error))
 
 ### Home Field Advantage
 
-```{r logisitcRegression, warning=FALSE}
+```{r homeFieldError, warning=FALSE}
 regressionData <- teamGameStats %>%
   select(home, win)
 folds <- cvFolds(n=nrow(regressionData), K = 10)
@@ -551,7 +569,7 @@ data.frame(Error=mean(error))
 
 ### First Downs
 
-```{r logisticRegressionFirstDowns, warning=FALSE}
+```{r firstDownsError, warning=FALSE}
 regressionData <- teamGameStats %>%
   select(firstDowns, win)
 folds <- cvFolds(n=nrow(regressionData), K = 10)
@@ -565,10 +583,9 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
-
 ### Time of Possession
 
-```{r logisticRegressionTOP, warning=FALSE}
+```{r TOPError, warning=FALSE}
 regressionData <- teamGameStats %>%
   select(timeOfPossesionDifferential, win)
 folds <- cvFolds(n=nrow(regressionData), K = 10)
@@ -582,10 +599,9 @@ for(i in 1:10) {
 data.frame(Error=mean(error))
 ```
 
-
 ### Penalties
 
-```{r logisticRegressionPenalties, warning=FALSE}
+```{r penaltiesError, warning=FALSE}
 regressionData <- teamGameStats %>%
   select(Penalty, win)
 folds <- cvFolds(n=nrow(regressionData), K = 10)
@@ -605,7 +621,7 @@ Each of the prediction types, random forest and logistic regression, will be tes
 
 ## Random Forest
 
-```{r randomForestAll, warning=FALSE}
+```{r compareMethodError, warning=FALSE}
 
 regressionData <- teamGameStats %>%
   select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, win)
@@ -626,7 +642,7 @@ data.frame("Random Forest Error"=mean(error))
 ```{r}
 regressionData <- teamGameStats %>%
   select(yardsFor, yardsAgainst, turnoverDiff, home, timeOfPossesionDifferential, win)
-folds <- cvFolds(n=nrow(regressionData), K = 10)
+folds <- cvFolds(n=nrow(regressionData), K=10)
 error <- vector()
 for(i in 1:10) {
   fold <- which(folds$which == i)
